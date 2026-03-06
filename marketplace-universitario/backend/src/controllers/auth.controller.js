@@ -1,0 +1,182 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { PrismaClient } = require('@prisma/client');
+const { sendPasswordReset, sendWelcomeEmail } = require('../services/email.service');
+
+const prisma = new PrismaClient();
+const COST_FACTOR = parseInt(process.env.BCRYPT_COST_FACTOR, 10) || 12;
+
+function signToken(user) {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+  );
+}
+
+function setCookieAndRespond(res, token, user) {
+  res.cookie('jwt', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 8 * 60 * 60 * 1000, // 8 hours
+  });
+
+  return res.json({
+    success: true,
+    message: 'Autenticación exitosa.',
+    user: { id: user.id, email: user.email, role: user.role, status: user.status },
+  });
+}
+
+// POST /api/auth/register
+async function register(req, res, next) {
+  try {
+    const { email, password, role } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Este correo ya está registrado.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, COST_FACTOR);
+    const user = await prisma.user.create({
+      data: { email, passwordHash, role },
+    });
+
+    // Fire-and-forget: do not let email failure break registration (RNF)
+    sendWelcomeEmail(user.email, user.role).catch((err) => {
+      console.error('[email] Welcome email failed:', err.message);
+    });
+
+    const token = signToken(user);
+    return setCookieAndRespond(res.status(201), token, user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/auth/login
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
+    }
+
+    if (user.status === 'SUSPENDED') {
+      return res.status(403).json({ success: false, message: 'Tu cuenta ha sido suspendida. Contacta al administrador.' });
+    }
+
+    if (user.status === 'DELETED') {
+      return res.status(403).json({ success: false, message: 'Esta cuenta no existe.' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordMatch) {
+      return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
+    }
+
+    const token = signToken(user);
+    return setCookieAndRespond(res, token, user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/auth/logout
+async function logout(req, res) {
+  res.clearCookie('jwt');
+  res.json({ success: true, message: 'Sesión cerrada correctamente.' });
+}
+
+// GET /api/auth/me
+async function me(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        profile: { select: { businessName: true, photoUrl: true } },
+      },
+    });
+
+    if (!user) {
+      res.clearCookie('jwt');
+      return res.status(401).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/auth/forgot-password
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always respond 200 to avoid email enumeration
+    if (!user) {
+      return res.json({ success: true, message: 'Si ese correo existe, recibirás instrucciones.' });
+    }
+
+    const token = uuidv4();
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken: token, passwordResetExpiry: expiry },
+    });
+
+    // Fire-and-forget: email failures must not break the reset flow (RNF)
+    sendPasswordReset(email, token).catch((err) => {
+      console.error('[email] Password reset email failed:', err.message);
+    });
+
+    res.json({ success: true, message: 'Si ese correo existe, recibirás instrucciones.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/auth/reset-password
+async function resetPassword(req, res, next) {
+  try {
+    const { token, password } = req.body;
+
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Token inválido o expirado.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, COST_FACTOR);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null },
+    });
+
+    res.json({ success: true, message: 'Contraseña actualizada exitosamente.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, logout, me, forgotPassword, resetPassword };

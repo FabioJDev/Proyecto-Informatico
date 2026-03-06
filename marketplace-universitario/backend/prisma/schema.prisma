@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email            String     @unique
+  passwordHash     String
+  role             Role       @default(COMPRADOR)
+  status           UserStatus @default(ACTIVE)
+  passwordResetToken  String?   @map("resetToken")
+  passwordResetExpiry DateTime? @map("resetTokenExpiry")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @default(now()) @updatedAt
+  ordersAsBuyer    Order[]    @relation("BuyerOrders")
+  ordersAsSeller   Order[]    @relation("SellerOrders")
+  products         Product[]
+  profile          Profile?
+  reviewsGiven     Review[]   @relation("ReviewerRelation")
+
+  @@index([email])
+}
+
+model Profile {
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId       String   @unique
+  businessName String
+  description  String?
+  photoUrl     String?
+  contactInfo  String?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews      Review[]
+}
+
+model Category {
+  id       String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String        @id @default(dbgenerated("(gen_random_uuid())::text"))
+  sellerId    String
+  categoryId  String
+  name        String
+  description String
+  price       Decimal
+  images      String[]      @default([])
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+  orders      Order[]
+  category    Category      @relation(fields: [categoryId], references: [id])
+  seller      User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([sellerId])
+}
+
+model Order {
+  id        String      @id @default(dbgenerated("(gen_random_uuid())::text"))
+  buyerId   String
+  sellerId  String
+  productId String
+  quantity  Int
+  message   String?
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  buyer     User        @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  seller    User        @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  review    Review?
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model Review {
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  orderId    String   @unique
+  profileId  String
+  reviewerId String
+  rating     Int
+  comment    String?  @db.VarChar(300)
+  createdAt  DateTime @default(now())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation("ReviewerRelation", fields: [reviewerId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  EMPRENDEDOR
+  COMPRADOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  DELIVERED
+  CANCELLED
+}

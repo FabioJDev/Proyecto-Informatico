@@ -1,0 +1,33 @@
+# ─── Dependencias ────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Variables de entorno (contienen credenciales sensibles) ─────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# ─── Prisma ──────────────────────────────────────────────────────────────────
+# El cliente generado se reconstruye con `prisma generate`
+node_modules/.prisma/
+# Migraciones de producción se manejan por separado (no ignorar prisma/migrations/)
+
+# ─── Cobertura de tests ──────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+
+# ─── Build ───────────────────────────────────────────────────────────────────
+dist/
+build/
+
+# ─── Temporales del sistema ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.tmp
+.cache/
