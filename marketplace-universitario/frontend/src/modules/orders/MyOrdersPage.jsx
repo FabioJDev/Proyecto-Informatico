@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Navbar from '../../components/layout/Navbar.jsx';
+import Footer from '../../components/layout/Footer.jsx';
 import OrderCard from '../../components/ui/OrderCard.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import Modal from '../../components/ui/Modal.jsx';
@@ -8,13 +9,33 @@ import { useToast } from '../../components/ui/Toast.jsx';
 import { useOrders } from '../../hooks/useOrders.js';
 import api from '../../services/api.js';
 
+function SkeletonOrder() {
+  return (
+    <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 space-y-3">
+      <div className="flex justify-between">
+        <div className="space-y-1.5 flex-1">
+          <div className="h-3 w-20 rounded skeleton" />
+          <div className="h-5 w-2/3 rounded skeleton" />
+          <div className="h-3 w-1/3 rounded skeleton" />
+        </div>
+        <div className="h-6 w-20 rounded-full skeleton" />
+      </div>
+      <div className="flex gap-6">
+        <div className="h-3 w-16 rounded skeleton" />
+        <div className="h-3 w-24 rounded skeleton" />
+        <div className="h-3 w-20 rounded skeleton" />
+      </div>
+    </div>
+  );
+}
+
 export default function MyOrdersPage() {
   const { addToast } = useToast();
   const { orders, pagination, isLoading, error, cancelOrder, setPage, refetch } = useOrders();
 
-  const [reviewModal, setReviewModal] = useState(null); // orderId
-  const [review, setReview] = useState({ rating: 5, comment: '' });
-  const [submitting, setSubmitting] = useState(false);
+  const [reviewModal, setReviewModal] = useState(null);
+  const [review,      setReview]      = useState({ rating: 5, comment: '' });
+  const [submitting,  setSubmitting]  = useState(false);
 
   const handleCancel = async (id) => {
     try {
@@ -40,46 +61,96 @@ export default function MyOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Mis pedidos</h1>
 
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 w-full flex-1">
+        <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-8 animate-in">
+          Mis pedidos
+        </h1>
+
+        {error && (
+          <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
         {isLoading ? (
-          <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />)}</div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonOrder key={i} />)}
+          </div>
         ) : orders.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <span className="text-5xl">🛒</span>
-            <p className="mt-3">Aún no tienes pedidos.</p>
+          <div className="text-center py-24 animate-in">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-[var(--accent-primary-dim)] border border-[var(--accent-primary)]/20 flex items-center justify-center">
+              <svg className="w-10 h-10 text-[var(--accent-primary-soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+              </svg>
+            </div>
+            <h3 className="font-display font-bold text-[var(--text-primary)] text-lg mb-2">Sin pedidos</h3>
+            <p className="text-[var(--text-muted)] text-sm">Aún no tienes pedidos. ¡Explora el catálogo!</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <OrderCard key={order.id} order={order} role="COMPRADOR"
-                onCancel={handleCancel}
-                onReview={(id) => setReviewModal(id)} />
+            {orders.map((order, i) => (
+              <div key={order.id} className="animate-in" style={{ animationDelay: `${i * 0.05}s` }}>
+                <OrderCard
+                  order={order}
+                  role="COMPRADOR"
+                  onCancel={handleCancel}
+                  onReview={(id) => setReviewModal(id)}
+                />
+              </div>
             ))}
           </div>
         )}
 
-        <Pagination pagination={pagination} onPageChange={refetch} />
+        <Pagination pagination={pagination} onPageChange={setPage} />
       </main>
 
-      <Modal isOpen={!!reviewModal} onClose={() => setReviewModal(null)} title="Dejar reseña"
-        confirmLabel="Publicar reseña" confirmVariant="primary" onConfirm={handleSubmitReview} isLoading={submitting}>
-        <div className="space-y-4">
+      <Footer />
+
+      {/* Review modal */}
+      <Modal
+        isOpen={!!reviewModal}
+        onClose={() => setReviewModal(null)}
+        title="Dejar reseña"
+        confirmLabel="Publicar reseña"
+        confirmVariant="primary"
+        onConfirm={handleSubmitReview}
+        isLoading={submitting}
+      >
+        <div className="space-y-5">
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Calificación</p>
-            <StarRating value={review.rating} onChange={(r) => setReview((p) => ({ ...p, rating: r }))} size="lg" />
+            <p className="text-sm font-medium text-[var(--text-secondary)] mb-3">Calificación</p>
+            <StarRating
+              value={review.rating}
+              onChange={(r) => setReview((p) => ({ ...p, rating: r }))}
+              size="lg"
+            />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Comentario (opcional)</label>
-            <textarea value={review.comment} onChange={(e) => setReview((p) => ({ ...p, comment: e.target.value }))}
-              maxLength={300} rows={3} placeholder="¿Cómo fue tu experiencia?"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none resize-none" />
-            <p className="text-xs text-gray-400 text-right">{review.comment.length}/300</p>
+            <label className="text-sm font-medium text-[var(--text-secondary)] block mb-2">
+              Comentario (opcional)
+            </label>
+            <textarea
+              value={review.comment}
+              onChange={(e) => setReview((p) => ({ ...p, comment: e.target.value }))}
+              maxLength={300}
+              rows={3}
+              placeholder="¿Cómo fue tu experiencia?"
+              className="
+                w-full px-4 py-3 rounded-xl text-sm
+                bg-[var(--bg-surface)] text-[var(--text-primary)]
+                border border-[var(--border-subtle)]
+                placeholder:text-[var(--text-muted)]
+                hover:border-[var(--border-strong)]
+                focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+                transition-all duration-200 resize-none
+              "
+            />
+            <p className="text-xs text-[var(--text-muted)] font-mono text-right mt-1">
+              {review.comment.length}/300
+            </p>
           </div>
         </div>
       </Modal>

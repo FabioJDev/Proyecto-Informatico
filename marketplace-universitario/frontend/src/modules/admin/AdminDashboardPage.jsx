@@ -4,27 +4,46 @@ import Navbar from '../../components/layout/Navbar.jsx';
 import StarRating from '../../components/ui/StarRating.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
-function StatCard({ label, value, sub, color = 'blue' }) {
-  const colors = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    red: 'bg-red-50 border-red-200 text-red-700',
-  };
+const KPI_PALETTE = {
+  primary: { bg: 'bg-[var(--accent-primary-dim)]', border: 'border-[var(--accent-primary)]/20', text: 'text-[var(--accent-primary-soft)]' },
+  violet: { bg: 'bg-[var(--accent-tertiary-dim)]', border: 'border-[var(--accent-tertiary)]/20', text: 'text-[var(--accent-tertiary)]' },
+  emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+  amber:   { bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   text: 'text-amber-400' },
+  red:     { bg: 'bg-red-500/10',     border: 'border-red-500/20',     text: 'text-red-400' },
+};
+
+function KpiCard({ label, value, sub, color = 'primary' }) {
+  const p = KPI_PALETTE[color] ?? KPI_PALETTE.primary;
   return (
-    <div className={`rounded-xl border p-5 ${colors[color]}`}>
-      <p className="text-sm font-medium opacity-75">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value ?? '—'}</p>
-      {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
+    <div className={`rounded-2xl border p-5 transition-all hover:-translate-y-0.5 duration-300 ${p.bg} ${p.border}`}>
+      <p className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider mb-2">{label}</p>
+      <p className={`font-display text-3xl font-bold ${p.text}`}>{value ?? '—'}</p>
+      {sub && <p className="text-xs text-[var(--text-muted)] mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+const STATUS_META = {
+  PENDING:   { label: 'Pendientes',  color: 'text-amber-400',   bg: 'bg-amber-500/10',   bar: 'bg-amber-400' },
+  ACCEPTED:  { label: 'Aceptadas',   color: 'text-[var(--accent-primary-soft)]', bg: 'bg-[var(--accent-primary-dim)]', bar: 'bg-[var(--accent-primary)]' },
+  DELIVERED: { label: 'Entregadas',  color: 'text-emerald-400', bg: 'bg-emerald-500/10', bar: 'bg-emerald-400' },
+  REJECTED:  { label: 'Rechazadas',  color: 'text-red-400',     bg: 'bg-red-500/10',     bar: 'bg-red-400' },
+  CANCELLED: { label: 'Canceladas',  color: 'text-[var(--text-muted)]', bg: 'bg-white/[0.04]', bar: 'bg-zinc-500' },
+};
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+      <div className="w-10 h-10 rounded-full border-2 border-transparent animate-spin-ring"
+        style={{ borderTopColor: '#6C63FF', borderRightColor: 'rgba(108,99,255,0.3)' }} />
     </div>
   );
 }
 
 export default function AdminDashboardPage() {
-  const [report, setReport] = useState(null);
+  const [report,    setReport]    = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error,     setError]     = useState(null);
 
   useEffect(() => {
     api.get('/reports/admin')
@@ -33,45 +52,58 @@ export default function AdminDashboardPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  if (isLoading) return <PageLoader />;
+
+  const maxRevenue = report?.revenueByMonth?.[0]?.revenue || 1;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Panel de administración</h1>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
 
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+        <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-8 animate-in">
+          Panel de administración
+        </h1>
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 animate-pulse">
-            {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-28 bg-gray-200 rounded-xl" />)}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+            {error}
           </div>
-        ) : report && (
+        )}
+
+        {report && (
           <>
-            {/* KPI cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-              <StatCard label="Usuarios totales" value={report.totalUsers} color="blue" />
-              <StatCard label="Emprendedores" value={report.totalEntrepreneurs} color="purple" />
-              <StatCard label="Compradores" value={report.totalBuyers} color="green" />
-              <StatCard label="Productos activos" value={report.totalActiveProducts} color="yellow" />
-              <StatCard label="Órdenes totales" value={report.totalOrders} color="red" />
+            {/* KPI row */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 animate-in delay-1">
+              <KpiCard label="Usuarios"        value={report.totalUsers}             color="primary" />
+              <KpiCard label="Emprendedores"   value={report.totalEntrepreneurs}     color="violet" />
+              <KpiCard label="Compradores"     value={report.totalBuyers}            color="emerald" />
+              <KpiCard label="Productos"       value={report.totalActiveProducts}    color="amber" />
+              <KpiCard label="Órdenes"         value={report.totalOrders}            color="red" />
             </div>
 
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Revenue by month */}
+              {/* Revenue chart */}
               {report.revenueByMonth?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
-                  <h2 className="font-semibold text-gray-800 mb-4">Ingresos mensuales (últimos 6 meses)</h2>
-                  <div className="space-y-2">
+                <div className="glass rounded-2xl border border-[var(--border-subtle)] p-5 animate-in delay-2">
+                  <h2 className="font-display font-bold text-[var(--text-primary)] mb-5">
+                    Ingresos mensuales
+                  </h2>
+                  <div className="space-y-3">
                     {report.revenueByMonth.map((row) => (
-                      <div key={row.month} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 w-24 shrink-0">{row.month}</span>
-                        <div className="flex-1 mx-3 bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div key={row.month} className="flex items-center gap-3 text-sm">
+                        <span className="text-[var(--text-muted)] font-mono text-xs w-20 shrink-0">
+                          {row.month}
+                        </span>
+                        <div className="flex-1 bg-white/[0.04] rounded-full h-1.5 overflow-hidden">
                           <div
-                            className="bg-primary-500 h-2 rounded-full"
-                            style={{ width: `${Math.min(100, (row.revenue / (report.revenueByMonth[0]?.revenue || 1)) * 100)}%` }}
+                            className="bg-gradient-primary h-1.5 rounded-full transition-all duration-700"
+                            style={{ width: `${Math.min(100, (row.revenue / maxRevenue) * 100)}%` }}
                           />
                         </div>
-                        <span className="font-medium text-gray-800 w-28 text-right">{formatCurrency(row.revenue)}</span>
+                        <span className="font-mono font-semibold text-amber-400 text-xs w-24 text-right shrink-0">
+                          {formatCurrency(row.revenue)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -80,22 +112,19 @@ export default function AdminDashboardPage() {
 
               {/* Orders by status */}
               {report.ordersByStatus?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
-                  <h2 className="font-semibold text-gray-800 mb-4">Órdenes por estado</h2>
+                <div className="glass rounded-2xl border border-[var(--border-subtle)] p-5 animate-in delay-3">
+                  <h2 className="font-display font-bold text-[var(--text-primary)] mb-5">
+                    Órdenes por estado
+                  </h2>
                   <div className="space-y-3">
                     {report.ordersByStatus.map((row) => {
-                      const statusLabels = {
-                        PENDING: { label: 'Pendientes', color: 'bg-yellow-100 text-yellow-800' },
-                        ACCEPTED: { label: 'Aceptadas', color: 'bg-blue-100 text-blue-800' },
-                        DELIVERED: { label: 'Entregadas', color: 'bg-green-100 text-green-800' },
-                        REJECTED: { label: 'Rechazadas', color: 'bg-red-100 text-red-800' },
-                        CANCELLED: { label: 'Canceladas', color: 'bg-gray-100 text-gray-800' },
-                      };
-                      const meta = statusLabels[row.status] || { label: row.status, color: 'bg-gray-100 text-gray-800' };
+                      const meta = STATUS_META[row.status] || { label: row.status, color: 'text-[var(--text-muted)]', bg: 'bg-white/[0.04]' };
                       return (
                         <div key={row.status} className="flex items-center justify-between">
-                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${meta.color}`}>{meta.label}</span>
-                          <span className="font-semibold text-gray-800">{row.count}</span>
+                          <span className={`text-xs font-mono font-medium px-2.5 py-1 rounded-full border ${meta.bg} ${meta.color}`} style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                            {meta.label}
+                          </span>
+                          <span className="font-display font-bold text-[var(--text-primary)]">{row.count}</span>
                         </div>
                       );
                     })}
@@ -105,34 +134,45 @@ export default function AdminDashboardPage() {
 
               {/* Top entrepreneurs */}
               {report.topEntrepreneurs?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
-                  <h2 className="font-semibold text-gray-800 mb-4">Top emprendedores</h2>
+                <div className="glass rounded-2xl border border-[var(--border-subtle)] p-5 lg:col-span-2 animate-in delay-4">
+                  <h2 className="font-display font-bold text-[var(--text-primary)] mb-5">
+                    Top emprendedores
+                  </h2>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-500 border-b border-gray-100">
-                          <th className="pb-2 font-medium">Emprendedor</th>
-                          <th className="pb-2 font-medium">Órdenes</th>
-                          <th className="pb-2 font-medium">Ingresos</th>
-                          <th className="pb-2 font-medium">Rating</th>
+                        <tr className="text-left border-b border-[var(--border-subtle)]">
+                          {['Emprendedor', 'Órdenes', 'Ingresos', 'Rating'].map((h) => (
+                            <th key={h} className="pb-3 font-mono text-xs text-[var(--text-muted)] uppercase tracking-wider font-medium pr-4">
+                              {h}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-[var(--border-subtle)]">
                         {report.topEntrepreneurs.map((e) => (
-                          <tr key={e.id}>
-                            <td className="py-2.5">
-                              <p className="font-medium text-gray-800">{e.profile?.displayName || e.email}</p>
-                              <p className="text-xs text-gray-400">{e.email}</p>
+                          <tr key={e.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-3 pr-4">
+                              <p className="font-medium text-[var(--text-primary)]">
+                                {e.profile?.displayName || e.email}
+                              </p>
+                              <p className="text-xs text-[var(--text-muted)]">{e.email}</p>
                             </td>
-                            <td className="py-2.5 text-gray-700">{e.totalOrders}</td>
-                            <td className="py-2.5 font-medium text-green-700">{formatCurrency(e.totalRevenue)}</td>
-                            <td className="py-2.5">
+                            <td className="py-3 pr-4 font-mono text-[var(--text-secondary)]">
+                              {e.totalOrders}
+                            </td>
+                            <td className="py-3 pr-4 font-mono font-semibold text-emerald-400">
+                              {formatCurrency(e.totalRevenue)}
+                            </td>
+                            <td className="py-3">
                               {e.avgRating ? (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                   <StarRating value={Math.round(e.avgRating)} readOnly size="sm" />
-                                  <span className="text-xs text-gray-500">({e.avgRating})</span>
+                                  <span className="text-xs text-[var(--text-muted)] font-mono">({e.avgRating})</span>
                                 </div>
-                              ) : <span className="text-gray-400 text-xs">Sin reseñas</span>}
+                              ) : (
+                                <span className="text-xs text-[var(--text-muted)]">Sin reseñas</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -143,7 +183,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            <p className="text-xs text-gray-400 mt-6 text-right">
+            <p className="text-xs text-[var(--text-muted)] font-mono mt-6 text-right">
               Generado el {formatDate(new Date().toISOString())}
             </p>
           </>

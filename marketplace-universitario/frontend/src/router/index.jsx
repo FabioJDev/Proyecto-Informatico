@@ -5,8 +5,14 @@ import ProtectedRoute from '../components/layout/ProtectedRoute.jsx';
 import { lazy, Suspense } from 'react';
 
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen flex items-center justify-center bg-[#0D0608]">
+    <div className="flex flex-col items-center gap-4">
+      <div
+        className="w-10 h-10 rounded-full border-2 border-transparent animate-spin-ring"
+        style={{ borderTopColor: '#DC1E3C', borderRightColor: 'rgba(220,30,60,0.3)' }}
+      />
+      <span className="text-xs font-mono text-[#6B4F56] tracking-widest uppercase">Cargando…</span>
+    </div>
   </div>
 );
 
