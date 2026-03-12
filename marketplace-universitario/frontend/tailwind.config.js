@@ -4,26 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Red Noir — primary palette
+        // Brand palette — light red design system
+        'brand-red':    '#990100',
+        'brand-bright': '#B90504',
+        'brand-dark':   '#333333',
+        'brand-light':  '#F6F6F6',
+        'brand-gray':   '#E8E8E8',
+
+        // Legacy primary — maps to brand red
         primary: {
-          DEFAULT: '#DC1E3C',
-          deep:    '#A8102A',
-          soft:    '#FF3355',
-          dim:     'rgba(220,30,60,0.12)',
+          DEFAULT: '#990100',
+          deep:    '#700000',
+          soft:    '#B90504',
+          dim:     'rgba(153,1,0,0.08)',
         },
         secondary: {
-          DEFAULT: '#E8A045',
-          dim:     'rgba(232,160,69,0.12)',
+          DEFAULT: '#990100',
+          dim:     'rgba(153,1,0,0.06)',
         },
         tertiary: {
-          DEFAULT: '#FF6B8A',
-          dim:     'rgba(255,107,138,0.10)',
+          DEFAULT: '#1D4ED8',
+          dim:     'rgba(29,78,216,0.10)',
         },
-        // Surface scale
+        // Surface scale — light theme
         surface: {
-          base: '#0D0608',
-          mid:  '#150A0C',
-          high: '#1F1014',
+          base: '#F6F6F6',
+          mid:  '#FFFFFF',
+          high: '#FFFFFF',
         },
         // Keep emerald for success states
         emerald: {
@@ -32,30 +39,30 @@ export default {
           200: '#a7f3d0',
           300: '#6ee7b7',
           400: '#34d399',
-          500: '#22C55E',
+          500: '#1A7A4A',
           600: '#16a34a',
           700: '#15803d',
           800: '#166534',
           900: '#14532d',
         },
-        // Keep amber for price / warning accents
+        // Keep amber for warning states
         amber: {
           50:  '#fffbeb',
           100: '#fef3c7',
           200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
-          500: '#E8A045',
+          500: '#B45309',
           600: '#d97706',
           700: '#b45309',
           800: '#92400e',
           900: '#78350f',
         },
-        // Red shades (replaces indigo)
+        // Red shades
         red: {
-          400: '#FF3355',
-          500: '#DC1E3C',
-          600: '#A8102A',
+          400: '#B90504',
+          500: '#990100',
+          600: '#700000',
         },
       },
       fontFamily: {
@@ -65,24 +72,24 @@ export default {
         mono:    ['JetBrains Mono', 'monospace'],
       },
       backgroundImage: {
-        'gradient-primary':   'linear-gradient(135deg, #DC1E3C 0%, #FF3355 50%, #A8102A 100%)',
-        'gradient-secondary': 'linear-gradient(135deg, #E8A045, #FF6B8A)',
-        'gradient-success':   'linear-gradient(135deg, #22C55E, #16a34a)',
-        'gradient-danger':    'linear-gradient(135deg, #EF4444, #DC2626)',
+        'gradient-primary':   'linear-gradient(135deg, #990100 0%, #B90504 100%)',
+        'gradient-secondary': 'linear-gradient(135deg, #B90504, #990100)',
+        'gradient-success':   'linear-gradient(135deg, #1A7A4A, #16a34a)',
+        'gradient-danger':    'linear-gradient(135deg, #990100, #B90504)',
         'gradient-mesh':
-          'radial-gradient(ellipse 70% 45% at 15% -5%, rgba(220,30,60,0.18) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 85% 105%, rgba(232,160,69,0.10) 0%, transparent 55%)',
+          'radial-gradient(circle at 100% 0%, rgba(153,1,0,0.04) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(153,1,0,0.03) 0%, transparent 50%)',
       },
       boxShadow: {
-        'glow-primary': '0 0 25px rgba(220,30,60,0.40)',
-        'glow-gold':    '0 0 20px rgba(232,160,69,0.30)',
-        'glow-emerald': '0 0 20px rgba(34,197,94,0.30)',
-        'glow-red':     '0 0 20px rgba(220,30,60,0.35)',
-        'card-hover':   '0 20px 60px rgba(220,30,60,0.15)',
-        'navbar':       '0 1px 40px rgba(0,0,0,0.5)',
+        'glow-primary': '0 0 25px rgba(153,1,0,0.25)',
+        'glow-gold':    '0 0 20px rgba(180,83,9,0.20)',
+        'glow-emerald': '0 0 20px rgba(26,122,74,0.25)',
+        'glow-red':     '0 0 25px rgba(153,1,0,0.25)',
+        'card-hover':   '0 8px 40px rgba(0,0,0,0.10)',
+        'navbar':       '0 2px 20px rgba(0,0,0,0.06)',
       },
       borderColor: {
-        subtle: 'rgba(220,30,60,0.08)',
-        strong: 'rgba(220,30,60,0.18)',
+        subtle: '#E8E8E8',
+        strong: '#CCCCCC',
       },
       animation: {
         'fade-up':    'fadeUp 0.5s ease forwards',

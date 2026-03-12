@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
-const darkInput = `
+const lightInput = `
   w-full px-4 py-2.5 rounded-xl text-sm
-  bg-[var(--bg-surface)] text-[var(--text-primary)]
-  border border-[var(--border-subtle)]
-  placeholder:text-[var(--text-muted)]
-  hover:border-[var(--border-strong)]
-  focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+  bg-white text-[#1A1A1A]
+  border-[1.5px] border-[#E8E8E8]
+  placeholder:text-[#999999]
+  hover:border-[#CCCCCC]
+  focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
   transition-all duration-200
 `;
 
@@ -20,13 +20,13 @@ export function SearchBar({ onSearch, placeholder = '¿Qué estás buscando hoy?
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full focus-within:shadow-glow-primary transition-shadow duration-300">
-      {/* Crimson square anchor tab */}
+      {/* Red square anchor tab */}
       <button
         type="submit"
         className="
           shrink-0 w-12 flex items-center justify-center
-          bg-[var(--accent-primary)] text-white
-          hover:bg-[var(--accent-primary-soft)]
+          bg-[#990100] text-white
+          hover:bg-[#B90504]
           transition-colors duration-200
         "
         style={{ borderRadius: '4px 0 0 4px' }}
@@ -37,7 +37,7 @@ export function SearchBar({ onSearch, placeholder = '¿Qué estás buscando hoy?
         </svg>
       </button>
 
-      {/* Input — sharp left, pill right */}
+      {/* Input */}
       <input
         type="text"
         value={value}
@@ -45,11 +45,11 @@ export function SearchBar({ onSearch, placeholder = '¿Qué estás buscando hoy?
         placeholder={placeholder}
         className="
           flex-1 px-5 py-3 text-sm italic
-          bg-[var(--bg-surface)] text-[var(--text-primary)]
-          placeholder:text-[var(--text-muted)] placeholder:italic
-          border border-l-0 border-[var(--border-subtle)]
-          hover:border-[var(--border-strong)]
-          focus:outline-none focus:border-[var(--accent-primary)]
+          bg-white text-[#1A1A1A]
+          placeholder:text-[#999999] placeholder:italic
+          border-[1.5px] border-l-0 border-[#E8E8E8]
+          hover:border-[#CCCCCC]
+          focus:outline-none focus:border-[#990100]
           transition-all duration-200
         "
         style={{ borderRadius: '0 40px 40px 0' }}
@@ -63,7 +63,7 @@ export function FilterPanel({ categories, filters, onFilterChange }) {
     <aside className="space-y-6">
       {/* Category */}
       <div>
-        <h3 className="font-display font-semibold text-[var(--text-primary)] text-sm mb-3 uppercase tracking-wider">
+        <h3 className="font-display font-semibold text-[#1A1A1A] text-sm mb-3 uppercase tracking-wider">
           Categoría
         </h3>
         <ul className="space-y-1">
@@ -72,8 +72,8 @@ export function FilterPanel({ categories, filters, onFilterChange }) {
               onClick={() => onFilterChange({ categoryId: '' })}
               className={`text-sm w-full text-left px-3 py-2 rounded-lg transition-colors duration-150 ${
                 !filters.categoryId
-                  ? 'bg-[var(--accent-primary-dim)] text-[var(--accent-primary-soft)] font-medium'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.04]'
+                  ? 'bg-[rgba(153,1,0,0.08)] text-[#990100] font-medium'
+                  : 'text-[#999999] hover:text-[#666666] hover:bg-[#F6F6F6]'
               }`}
             >
               Todas
@@ -85,8 +85,8 @@ export function FilterPanel({ categories, filters, onFilterChange }) {
                 onClick={() => onFilterChange({ categoryId: cat.id })}
                 className={`text-sm w-full text-left px-3 py-2 rounded-lg transition-colors duration-150 ${
                   filters.categoryId === cat.id
-                    ? 'bg-[var(--accent-primary-dim)] text-[var(--accent-primary-soft)] font-medium'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.04]'
+                    ? 'bg-[rgba(153,1,0,0.08)] text-[#990100] font-medium'
+                    : 'text-[#999999] hover:text-[#666666] hover:bg-[#F6F6F6]'
                 }`}
               >
                 {cat.name}
@@ -98,7 +98,7 @@ export function FilterPanel({ categories, filters, onFilterChange }) {
 
       {/* Price range */}
       <div>
-        <h3 className="font-display font-semibold text-[var(--text-primary)] text-sm mb-3 uppercase tracking-wider">
+        <h3 className="font-display font-semibold text-[#1A1A1A] text-sm mb-3 uppercase tracking-wider">
           Precio
         </h3>
         <div className="flex gap-2 items-center">
@@ -108,16 +108,16 @@ export function FilterPanel({ categories, filters, onFilterChange }) {
             min="0"
             value={filters.minPrice || ''}
             onChange={(e) => onFilterChange({ minPrice: e.target.value || undefined })}
-            className={darkInput}
+            className={lightInput}
           />
-          <span className="text-[var(--text-muted)] shrink-0">–</span>
+          <span className="text-[#999999] shrink-0">–</span>
           <input
             type="number"
             placeholder="Máx"
             min="0"
             value={filters.maxPrice || ''}
             onChange={(e) => onFilterChange({ maxPrice: e.target.value || undefined })}
-            className={darkInput}
+            className={lightInput}
           />
         </div>
       </div>

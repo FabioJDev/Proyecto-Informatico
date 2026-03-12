@@ -13,8 +13,8 @@ function getStrength(password) {
 }
 
 const strengthLabel = ['', 'Débil', 'Regular', 'Buena', 'Fuerte'];
-const strengthColor = ['', 'bg-red-400', 'bg-amber-400', 'bg-[var(--accent-primary-soft)]', 'bg-emerald-400'];
-const strengthText  = ['', 'text-red-400', 'text-amber-400', 'text-[var(--accent-primary-soft)]', 'text-emerald-400'];
+const strengthColor = ['', 'bg-[#990100]', 'bg-[#B45309]', 'bg-[#1A7A4A]', 'bg-[#1A7A4A]'];
+const strengthText  = ['', 'text-[#990100]', 'text-[#B45309]', 'text-[#1A7A4A]', 'text-[#1A7A4A]'];
 
 function PasswordStrength({ password }) {
   if (!password) return null;
@@ -26,7 +26,7 @@ function PasswordStrength({ password }) {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-              i <= score ? strengthColor[score] : 'bg-white/10'
+              i <= score ? strengthColor[score] : 'bg-[#E8E8E8]'
             }`}
           />
         ))}
@@ -51,30 +51,25 @@ function EyeIcon({ open }) {
   );
 }
 
-function DiamondLogo() {
+function MLogoMark() {
   return (
-    <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2L18 10L10 18L2 10L10 2Z" fill="url(#regDiamond)" />
-      <defs>
-        <linearGradient id="regDiamond" x1="2" y1="2" x2="18" y2="18" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#6C63FF" />
-          <stop offset="1" stopColor="#F59E0B" />
-        </linearGradient>
-      </defs>
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="4" fill="#990100" />
+      <path d="M5 21V7l9 10 9-10v14" stroke="#F6F6F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }
 
 const inputClass = (hasError) => `
   w-full px-4 py-3 rounded-xl text-sm
-  bg-[var(--bg-surface)] text-[var(--text-primary)]
-  border placeholder:text-[var(--text-muted)]
-  hover:border-[var(--border-strong)]
-  focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+  bg-white text-[#1A1A1A]
+  border-[1.5px] placeholder:text-[#999999]
+  hover:border-[#CCCCCC]
+  focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
   transition-all duration-200
   ${hasError
-    ? 'border-red-500/60 bg-red-500/5 focus:ring-red-500/20 focus:border-red-500'
-    : 'border-[var(--border-subtle)]'
+    ? 'border-[#990100] bg-[rgba(153,1,0,0.04)]'
+    : 'border-[#E8E8E8]'
   }
 `;
 
@@ -152,29 +147,30 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#F6F6F6]">
 
       {/* ── Left decorative panel ── */}
-      <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col justify-between p-12">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/08 via-[var(--bg-surface)] to-[var(--accent-secondary)]/06" />
-        <div className="absolute inset-0 grid-bg opacity-50" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-amber-500/8 blur-3xl" />
+      <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col justify-between p-12 bg-white border-r border-[#E8E8E8]">
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 80% 20%, rgba(153,1,0,0.06) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(153,1,0,0.04) 0%, transparent 50%)'
+        }} />
+        <div className="absolute inset-0 grid-bg opacity-40" />
 
         {/* Brand */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3 mb-16">
-            <DiamondLogo />
-            <span className="font-display font-bold text-[var(--text-primary)] text-lg">MktUni</span>
+            <MLogoMark />
+            <span className="font-display font-bold text-[#1A1A1A] text-lg">MktUni</span>
           </Link>
 
-          <p className="text-xs font-mono text-amber-400 uppercase tracking-widest mb-4">
+          <p className="text-xs font-mono text-[#990100] uppercase tracking-widest mb-4">
             Únete al marketplace
           </p>
-          <h2 className="font-display text-white text-3xl font-bold leading-snug mb-4">
+          <h2 className="font-display text-[#1A1A1A] text-3xl font-extrabold leading-snug mb-4">
             Conecta con tu<br />comunidad<br />
             <span className="gradient-text">universitaria</span>
           </h2>
-          <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xs">
+          <p className="text-[#666666] text-sm leading-relaxed max-w-xs">
             Únete a cientos de estudiantes que ya compran y venden dentro de su universidad.
           </p>
         </div>
@@ -187,38 +183,37 @@ export default function RegisterPage() {
           ].map(({ icon, text }, i) => (
             <div
               key={text}
-              className="flex items-center gap-3 glass rounded-xl px-4 py-3 border border-[var(--border-subtle)] animate-in"
+              className="flex items-center gap-3 bg-[#F6F6F6] border border-[#E8E8E8] rounded-xl px-4 py-3 animate-in hover:border-[#990100] transition-colors duration-200"
               style={{ animationDelay: `${0.1 + i * 0.1}s` }}
             >
               <span className="text-xl">{icon}</span>
-              <span className="text-sm text-[var(--text-secondary)]">{text}</span>
+              <span className="text-sm text-[#666666]">{text}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 relative">
-        <div className="absolute inset-0 bg-[var(--bg-base)]" />
-        <div className="w-full max-w-md relative z-10">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[#F6F6F6]">
+        <div className="w-full max-w-md">
 
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <DiamondLogo />
-            <span className="font-display font-bold text-[var(--text-primary)]">MktUni</span>
+            <MLogoMark />
+            <span className="font-display font-bold text-[#1A1A1A]">MktUni</span>
           </Link>
 
           <div className="animate-in">
-            <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-1">
+            <h1 className="font-display text-3xl font-extrabold text-[#1A1A1A] mb-1">
               Únete al Marketplace
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm mb-6">
+            <p className="text-[#666666] text-sm mb-6">
               Usa tu correo institucional para registrarte.
             </p>
           </div>
 
           {apiError && (
-            <div className="mb-5 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400 flex items-start gap-2 animate-in">
+            <div className="mb-5 p-4 rounded-xl bg-[rgba(153,1,0,0.06)] border border-[rgba(153,1,0,0.20)] text-sm text-[#990100] flex items-start gap-2 animate-in">
               <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
@@ -229,8 +224,8 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4 animate-in delay-1">
             {/* Email */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--text-secondary)]">
-                Correo institucional <span className="text-[var(--accent-primary-soft)]">*</span>
+              <label className="text-sm font-medium text-[#666666]">
+                Correo institucional <span className="text-[#990100]">*</span>
               </label>
               <input
                 name="email"
@@ -242,13 +237,13 @@ export default function RegisterPage() {
                 autoComplete="email"
                 className={inputClass(!!errors.email)}
               />
-              {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
+              {errors.email && <p className="text-xs text-[#990100]">{errors.email}</p>}
             </div>
 
             {/* Password */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--text-secondary)]">
-                Contraseña <span className="text-[var(--accent-primary-soft)]">*</span>
+              <label className="text-sm font-medium text-[#666666]">
+                Contraseña <span className="text-[#990100]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -264,19 +259,19 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#666666] transition-colors"
                 >
                   <EyeIcon open={showPw} />
                 </button>
               </div>
-              {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
+              {errors.password && <p className="text-xs text-[#990100]">{errors.password}</p>}
               <PasswordStrength password={form.password} />
             </div>
 
             {/* Confirm password */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--text-secondary)]">
-                Confirmar contraseña <span className="text-[var(--accent-primary-soft)]">*</span>
+              <label className="text-sm font-medium text-[#666666]">
+                Confirmar contraseña <span className="text-[#990100]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -292,25 +287,25 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowCpw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#666666] transition-colors"
                 >
                   <EyeIcon open={showCpw} />
                 </button>
                 {form.confirmPassword && form.password === form.confirmPassword && (
-                  <div className="absolute right-9 top-1/2 -translate-y-1/2 text-emerald-400">
+                  <div className="absolute right-9 top-1/2 -translate-y-1/2 text-[#1A7A4A]">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                 )}
               </div>
-              {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="text-xs text-[#990100]">{errors.confirmPassword}</p>}
             </div>
 
             {/* Role selector */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[var(--text-secondary)]">
-                Tipo de cuenta <span className="text-[var(--accent-primary-soft)]">*</span>
+              <label className="text-sm font-medium text-[#666666]">
+                Tipo de cuenta <span className="text-[#990100]">*</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {roles.map(({ value, icon, title, subtitle }) => (
@@ -322,17 +317,17 @@ export default function RegisterPage() {
                       flex flex-col items-center gap-2 p-4 rounded-xl border-2
                       text-sm font-medium transition-all duration-200
                       ${form.role === value
-                        ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-dim)] text-[var(--accent-primary-soft)]'
-                        : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-secondary)]'
+                        ? 'border-[#990100] bg-[rgba(153,1,0,0.06)] text-[#990100]'
+                        : 'border-[#E8E8E8] bg-white text-[#999999] hover:border-[#CCCCCC] hover:text-[#666666]'
                       }
                     `}
                   >
-                    <span className={form.role === value ? 'text-[var(--accent-primary-soft)]' : 'text-[var(--text-muted)]'}>
+                    <span className={form.role === value ? 'text-[#990100]' : 'text-[#999999]'}>
                       {icon}
                     </span>
                     <div className="text-center">
                       <p className="font-semibold leading-tight">{title}</p>
-                      <p className="text-xs font-normal text-[var(--text-muted)] mt-0.5 leading-tight">{subtitle}</p>
+                      <p className="text-xs font-normal text-[#999999] mt-0.5 leading-tight">{subtitle}</p>
                     </div>
                   </button>
                 ))}
@@ -345,9 +340,9 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="
                 w-full py-3 px-6 rounded-xl
-                text-sm font-semibold text-white
-                bg-gradient-primary shadow-glow-primary animate-glow-pulse
-                hover:-translate-y-0.5 active:translate-y-0
+                text-sm font-semibold text-[#F6F6F6]
+                bg-[#990100] shadow-glow-primary animate-glow-pulse
+                hover:bg-[#B90504] hover:-translate-y-0.5 active:translate-y-0
                 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:animate-none
                 transition-all duration-200
                 flex items-center justify-center gap-2
@@ -360,9 +355,9 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-[var(--text-muted)] mt-6 animate-in delay-2">
+          <p className="text-center text-sm text-[#999999] mt-6 animate-in delay-2">
             ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-[var(--accent-primary-soft)] font-medium hover:text-[var(--accent-primary)] transition-colors">
+            <Link to="/login" className="text-[#990100] font-medium hover:text-[#B90504] transition-colors">
               Inicia sesión
             </Link>
           </p>

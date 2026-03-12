@@ -43,8 +43,8 @@ function SidebarLink({ to, icon, children }) {
         `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium
          transition-all duration-150 relative group
          ${isActive
-           ? 'bg-[var(--accent-primary-dim)] text-[var(--accent-primary-soft)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--accent-primary)] before:rounded-full'
-           : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.04]'
+           ? 'bg-[rgba(153,1,0,0.08)] text-[#990100] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#990100] before:rounded-full'
+           : 'text-[#666666] hover:text-[#333333] hover:bg-[#F6F6F6]'
          }`
       }
     >

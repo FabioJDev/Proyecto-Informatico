@@ -1,68 +1,95 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api.js';
+import { useAuthStore } from '../../store/authStore.js';
 import Navbar from '../../components/layout/Navbar.jsx';
-import Input from '../../components/ui/Input.jsx';
-import Button from '../../components/ui/Button.jsx';
+import ProfileForm from '../../components/profile/ProfileForm.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 
 export default function EditProfilePage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [form, setForm] = useState({ businessName: '', description: '', contactInfo: '' });
-  const [isLoading, setIsLoading] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  const [initialValues, setInitialValues] = useState(null);
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
-    api.get('/auth/me')
+    api.get('/users/profile/me')
       .then((res) => {
-        const profile = res.data.user?.profile;
-        if (profile) {
-          setForm({
-            businessName: profile.businessName || '',
-            description: profile.description || '',
-            contactInfo: profile.contactInfo || '',
-          });
+        const p = res.data.profile;
+        setInitialValues({
+          businessName: p.businessName || '',
+          description: p.description || '',
+          contactInfo: p.contactInfo || '',
+          photoUrl: p.photoUrl || null,
+        });
+      })
+      .catch((err) => {
+        if (err.response?.status === 404) {
+          // No profile yet — redirect to create
+          navigate('/profile/create', { replace: true });
+        } else if (err.response?.status === 403) {
+          // CA-04: not an emprendedor
+          addToast('No tienes permiso para editar este perfil.', 'error');
+          navigate('/dashboard', { replace: true });
+        } else {
+          addToast('Error al cargar el perfil.', 'error');
+          navigate('/dashboard', { replace: true });
         }
       })
       .finally(() => setIsFetching(false));
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleSubmit = async (payload) => {
     try {
-      await api.put('/users/profile', form);
+      const res = await api.put('/users/profile', payload);
+      updateUser({ profile: res.data.profile });
       addToast('Perfil actualizado correctamente.', 'success');
-      navigate('/dashboard');
+      navigate(`/profile/${user.id}`);
     } catch (err) {
-      addToast(err.userMessage || 'Error al actualizar el perfil.', 'error');
-    } finally {
-      setIsLoading(false);
+      if (err.response?.status === 403) {
+        addToast('No tienes permiso para editar este perfil.', 'error');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      const validationErrors = err.validationErrors;
+      if (validationErrors?.length) {
+        addToast(validationErrors[0].msg, 'error');
+      } else {
+        addToast(err.userMessage || 'Error al guardar. Inténtalo de nuevo.', 'error');
+      }
+      // Re-throw so ProfileForm can release its loading state
+      throw err;
     }
   };
 
-  if (isFetching) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>;
+  if (isFetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F6F6F6]">
+        <div
+          className="w-8 h-8 rounded-full border-[3px] border-[#E8E8E8]"
+          style={{ borderTopColor: '#990100', animation: 'spin 0.8s linear infinite' }}
+        />
+      </div>
+    );
+  }
+
+  if (!initialValues) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
-      <main className="max-w-xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Editar perfil de emprendimiento</h1>
-
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Input label="Nombre del emprendimiento" value={form.businessName} onChange={(e) => setForm((p) => ({ ...p, businessName: e.target.value }))} placeholder="Ej: Delicias Uni" required />
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Descripción</label>
-              <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={4} maxLength={500}
-                placeholder="Cuéntanos sobre tu emprendimiento…"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none resize-none" />
-            </div>
-            <Input label="Información de contacto" value={form.contactInfo} onChange={(e) => setForm((p) => ({ ...p, contactInfo: e.target.value }))} placeholder="WhatsApp, Instagram, etc." />
-            <Button type="submit" className="w-full" isLoading={isLoading}>Guardar cambios</Button>
-          </form>
-        </div>
+      <main className="flex-1">
+        <ProfileForm
+          isEditing={true}
+          initialValues={initialValues}
+          pageTitle="Editar tu perfil"
+          pageSubtitle="Los cambios se reflejan inmediatamente en el catálogo."
+          onSubmit={handleSubmit}
+          onCancel={() => navigate(`/profile/${user.id}`)}
+        />
       </main>
     </div>
   );

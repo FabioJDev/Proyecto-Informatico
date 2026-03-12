@@ -1,13 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
+// Use service_role key for server-side uploads (bypasses RLS); fall back to anon key
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-const BUCKET_PRODUCTS = 'product-images';
-const BUCKET_PROFILES = 'profile-images';
+const BUCKET_PRODUCTS = 'products';
+const BUCKET_PROFILES = 'profiles';
 
 /**
  * Upload a file buffer to Supabase Storage.

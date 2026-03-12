@@ -1,42 +1,60 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { uploadProductImage, deleteFile, BUCKET_PRODUCTS } = require('../services/storage.service');
-
-const prisma = new PrismaClient();
 
 // GET /api/products — public paginated catalog with filters
 async function getAll(req, res, next) {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 12;
-    const skip = (page - 1) * limit;
+    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit = Math.min(48, Math.max(1, parseInt(req.query.limit, 10) || 12));
+    const skip  = (page - 1) * limit;
 
-    const { keyword, categoryId, minPrice, maxPrice } = req.query;
+    const { keyword, search, categoryId, category, minPrice, maxPrice, sellerId, orderBy } = req.query;
+
+    // 'search' (US-11) is an alias for 'keyword' (US-07 backward compat)
+    const searchTerm     = search || keyword;
+    const categoryFilter = category || categoryId;
+
+    // CA-03: validate price range
+    if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
+      return res.status(400).json({
+        success: false,
+        error: 'El precio mínimo no puede ser mayor al máximo',
+      });
+    }
 
     const where = {
-      status: 'ACTIVE',
-      ...(categoryId && { categoryId }),
-      ...(keyword && {
+      // When filtered by seller (My Products), show all non-deleted; otherwise only ACTIVE for public catalog
+      ...(sellerId ? { sellerId, status: { not: 'DELETED' } } : { status: 'ACTIVE' }),
+      ...(categoryFilter && { categoryId: categoryFilter }),
+      ...(searchTerm && {
         OR: [
-          { name: { contains: keyword, mode: 'insensitive' } },
-          { description: { contains: keyword, mode: 'insensitive' } },
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { description: { contains: searchTerm, mode: 'insensitive' } },
         ],
       }),
-      ...(minPrice !== undefined || maxPrice !== undefined
+      ...((minPrice || maxPrice)
         ? {
             price: {
-              ...(minPrice !== undefined && { gte: minPrice }),
-              ...(maxPrice !== undefined && { lte: maxPrice }),
+              ...(minPrice && { gte: parseFloat(minPrice) }),
+              ...(maxPrice && { lte: parseFloat(maxPrice) }),
             },
           }
         : {}),
     };
 
+    // Sort order (orderBy query param)
+    let sortOrder;
+    if (orderBy === 'price_asc')  sortOrder = { price: 'asc' };
+    else if (orderBy === 'price_desc') sortOrder = { price: 'desc' };
+    else sortOrder = { createdAt: 'desc' };
+
+    const queryStart = Date.now();
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: sortOrder,
         include: {
           seller: { select: { id: true, email: true, profile: { select: { businessName: true, photoUrl: true } } } },
           category: { select: { id: true, name: true } },
@@ -45,11 +63,30 @@ async function getAll(req, res, next) {
       }),
       prisma.product.count({ where }),
     ]);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[getAll] Products query: ${Date.now() - queryStart}ms`);
+    }
 
+    const totalPages = Math.ceil(total / limit);
     res.json({
       success: true,
       data: products,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: totalPages,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+      filters: {
+        search: searchTerm || '',
+        category: categoryFilter || '',
+        minPrice: minPrice ? parseFloat(minPrice) : null,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+        orderBy: orderBy || 'recent',
+      },
     });
   } catch (err) {
     next(err);
@@ -87,6 +124,7 @@ async function getById(req, res, next) {
 async function getCategories(req, res, next) {
   try {
     const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+    console.log('[getCategories] fetched:', categories.length);
     res.json({ success: true, data: categories });
   } catch (err) {
     next(err);
@@ -127,7 +165,7 @@ async function create(req, res, next) {
         sellerId,
         categoryId,
         name,
-        description,
+        description: description || '',
         price,
         images: imageUrls,
       },
@@ -158,8 +196,17 @@ async function update(req, res, next) {
 
     const { name, description, price, categoryId, status } = req.body;
 
-    // Handle new image uploads
+    // Handle image updates
+    // existingImages (JSON array of URLs to keep) lets the frontend remove old images
     let imageUrls = product.images;
+    if (req.body.existingImages !== undefined) {
+      try {
+        const kept = JSON.parse(req.body.existingImages);
+        imageUrls = Array.isArray(kept) ? kept : [];
+      } catch {
+        imageUrls = product.images;
+      }
+    }
     if (req.files && req.files.length > 0) {
       const newUrls = await Promise.all(
         req.files.map((f) => uploadProductImage(f.buffer, f.originalname, f.mimetype))
@@ -171,7 +218,7 @@ async function update(req, res, next) {
       where: { id },
       data: {
         ...(name && { name }),
-        ...(description && { description }),
+        ...(description !== undefined && { description: description || '' }),
         ...(price !== undefined && { price }),
         ...(categoryId && { categoryId }),
         ...(status && { status }),
@@ -186,7 +233,7 @@ async function update(req, res, next) {
   }
 }
 
-// DELETE /api/products/:id — [EMPRENDEDOR/ADMIN] deactivate product
+// DELETE /api/products/:id — [EMPRENDEDOR/ADMIN] soft-delete own product
 async function remove(req, res, next) {
   try {
     const { id } = req.params;
@@ -195,16 +242,38 @@ async function remove(req, res, next) {
     const product = await prisma.product.findUnique({ where: { id } });
 
     if (!product || product.status === 'DELETED') {
-      return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
+      return res.status(404).json({ success: false, message: 'Publicación no encontrada.' });
     }
 
     if (role !== 'ADMIN' && product.sellerId !== userId) {
-      return res.status(403).json({ success: false, message: 'No tienes permiso para eliminar este producto.' });
+      return res.status(403).json({ success: false, error: 'No tienes permiso para eliminar esta publicación.' });
     }
 
+    // CA-03: Block deletion if product has pending or accepted orders
+    const activeOrders = await prisma.order.count({
+      where: { productId: id, status: { in: ['PENDING', 'ACCEPTED'] } },
+    });
+    if (activeOrders > 0) {
+      return res.status(409).json({
+        success: false,
+        error: 'No puedes eliminar una publicación con pedidos activos. Resuelve los pedidos primero',
+        code: 'HAS_ACTIVE_ORDERS',
+      });
+    }
+
+    // Soft delete — preserves referential integrity with orders and reviews
     await prisma.product.update({ where: { id }, data: { status: 'DELETED' } });
 
-    res.json({ success: true, message: 'Producto eliminado correctamente.' });
+    // Clean up images from Supabase Storage (non-blocking — don't fail the request)
+    for (const url of product.images) {
+      try {
+        await deleteFile(url, BUCKET_PRODUCTS);
+      } catch (imgErr) {
+        console.error('[remove] Failed to delete image from storage:', imgErr.message);
+      }
+    }
+
+    res.json({ success: true, message: 'Publicación eliminada exitosamente' });
   } catch (err) {
     next(err);
   }

@@ -2,40 +2,40 @@ import { ORDER_STATUS } from '../../utils/constants.js';
 
 const colorMap = {
   yellow: {
-    bg: 'bg-amber-500/15',
-    text: 'text-amber-400',
-    border: 'border-amber-500/30',
-    dot: 'bg-amber-400',
+    bg: 'bg-[#FEF3C7]',
+    text: 'text-[#B45309]',
+    border: 'border-[#FDE68A]',
+    dot: 'bg-[#B45309]',
   },
   green: {
-    bg: 'bg-emerald-500/15',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/30',
-    dot: 'bg-emerald-400',
+    bg: 'bg-[#D1FAE5]',
+    text: 'text-[#065F46]',
+    border: 'border-[#6EE7B7]',
+    dot: 'bg-[#1A7A4A]',
   },
   red: {
-    bg: 'bg-red-500/15',
-    text: 'text-red-400',
-    border: 'border-red-500/30',
-    dot: 'bg-red-400',
+    bg: 'bg-[rgba(153,1,0,0.08)]',
+    text: 'text-[#990100]',
+    border: 'border-[rgba(153,1,0,0.20)]',
+    dot: 'bg-[#990100]',
   },
   blue: {
-    bg: 'bg-[var(--accent-primary-dim)]',
-    text: 'text-[var(--accent-primary-soft)]',
-    border: 'border-[var(--accent-primary)]/30',
-    dot: 'bg-[var(--accent-primary-soft)]',
+    bg: 'bg-[rgba(29,78,216,0.08)]',
+    text: 'text-[#1D4ED8]',
+    border: 'border-[rgba(29,78,216,0.20)]',
+    dot: 'bg-[#1D4ED8]',
   },
   gray: {
-    bg: 'bg-white/[0.06]',
-    text: 'text-[var(--text-secondary)]',
-    border: 'border-white/10',
-    dot: 'bg-zinc-400',
+    bg: 'bg-[#F3F4F6]',
+    text: 'text-[#6B7280]',
+    border: 'border-[#E5E7EB]',
+    dot: 'bg-[#9CA3AF]',
   },
   purple: {
-    bg: 'bg-[var(--accent-tertiary-dim)]',
-    text: 'text-[var(--accent-tertiary)]',
-    border: 'border-[var(--accent-tertiary)]/30',
-    dot: 'bg-[var(--accent-tertiary)]',
+    bg: 'bg-[#EDE9FE]',
+    text: 'text-[#5B21B6]',
+    border: 'border-[#C4B5FD]',
+    dot: 'bg-[#7C3AED]',
   },
 };
 
@@ -48,7 +48,7 @@ export function OrderBadge({ status }) {
     <span
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
-        text-xs font-mono font-medium uppercase tracking-wider
+        text-xs font-mono font-medium uppercase tracking-[0.08em]
         border ${c.bg} ${c.text} ${c.border}
       `}
     >
@@ -73,7 +73,7 @@ export function RoleBadge({ role }) {
     <span
       className={`
         inline-flex items-center px-2.5 py-0.5 rounded-full
-        text-xs font-mono font-medium uppercase tracking-wider
+        text-xs font-mono font-medium uppercase tracking-[0.08em]
         border ${c.bg} ${c.text} ${c.border}
       `}
     >

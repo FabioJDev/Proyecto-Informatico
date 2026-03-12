@@ -28,32 +28,32 @@ const ICONS = {
 
 const TYPE_STYLES = {
   success: {
-    bg:         'bg-[var(--bg-elevated)]',
-    border:     'border-emerald-500/30',
-    icon:       'text-emerald-400',
-    glow:       '0 0 20px rgba(16,185,129,0.2)',
-    progress:   'bg-emerald-400',
+    bg:       'bg-white',
+    border:   'border-l-[#1A7A4A]',
+    icon:     'text-[#1A7A4A]',
+    progress: 'bg-[#1A7A4A]',
+    shadow:   '0 4px 20px rgba(0,0,0,0.10)',
   },
   error: {
-    bg:         'bg-[var(--bg-elevated)]',
-    border:     'border-red-500/30',
-    icon:       'text-red-400',
-    glow:       '0 0 20px rgba(239,68,68,0.2)',
-    progress:   'bg-red-400',
+    bg:       'bg-white',
+    border:   'border-l-[#990100]',
+    icon:     'text-[#990100]',
+    progress: 'bg-[#990100]',
+    shadow:   '0 4px 20px rgba(0,0,0,0.10)',
   },
   info: {
-    bg:         'bg-[var(--bg-elevated)]',
-    border:     'border-[var(--accent-primary)]/30',
-    icon:       'text-[var(--accent-primary-soft)]',
-    glow:       '0 0 20px rgba(220,30,60,0.2)',
-    progress:   'bg-[var(--accent-primary-soft)]',
+    bg:       'bg-white',
+    border:   'border-l-[#1D4ED8]',
+    icon:     'text-[#1D4ED8]',
+    progress: 'bg-[#1D4ED8]',
+    shadow:   '0 4px 20px rgba(0,0,0,0.10)',
   },
   warning: {
-    bg:         'bg-[var(--bg-elevated)]',
-    border:     'border-amber-500/30',
-    icon:       'text-amber-400',
-    glow:       '0 0 20px rgba(245,158,11,0.2)',
-    progress:   'bg-amber-400',
+    bg:       'bg-white',
+    border:   'border-l-[#B45309]',
+    icon:     'text-[#B45309]',
+    progress: 'bg-[#B45309]',
+    shadow:   '0 4px 20px rgba(0,0,0,0.10)',
   },
 };
 
@@ -64,22 +64,22 @@ function Toast({ toast, onRemove }) {
   return (
     <div
       className={`
-        relative overflow-hidden rounded-xl border backdrop-blur-xl
-        ${s.bg} ${s.border}
+        relative overflow-hidden rounded-xl
+        border border-[#E8E8E8] border-l-4 ${s.border}
+        ${s.bg}
         animate-slide-in
         max-w-sm w-full
-        shadow-2xl
       `}
-      style={{ boxShadow: s.glow }}
+      style={{ boxShadow: s.shadow }}
     >
       <div className="flex items-start gap-3 p-4">
         <span className={`mt-0.5 ${s.icon}`}>{ICONS[toast.type]}</span>
-        <p className="flex-1 text-sm text-[var(--text-primary)] leading-relaxed">
+        <p className="flex-1 text-sm text-[#333333] leading-relaxed">
           {toast.message}
         </p>
         <button
           onClick={() => onRemove(toast.id)}
-          className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors shrink-0 mt-0.5"
+          className="text-[#999999] hover:text-[#333333] transition-colors shrink-0 mt-0.5"
           aria-label="Cerrar"
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -89,7 +89,7 @@ function Toast({ toast, onRemove }) {
       </div>
 
       {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/5">
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8E8E8]">
         <div
           className={`h-full ${s.progress} toast-progress`}
           style={{ animationDuration: `${duration}ms` }}

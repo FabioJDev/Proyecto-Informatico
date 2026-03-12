@@ -1,11 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const {
   sendOrderConfirmation,
   sendNewOrderToSeller,
   sendOrderStatusChange,
 } = require('../services/email.service');
-
-const prisma = new PrismaClient();
 
 // POST /api/orders — [COMPRADOR] create order
 async function create(req, res, next) {
@@ -43,13 +41,23 @@ async function create(req, res, next) {
     });
 
     // Fire emails asynchronously (RF-15 < 5s)
+    const orderDate = new Date().toLocaleString('es-CO', {
+      timeZone: 'America/Bogota',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
     const orderDetails = {
       orderId: order.id,
       productName: order.product.name,
       quantity: order.quantity,
       sellerName: order.seller.profile?.businessName || order.seller.email,
       buyerEmail: order.buyer.email,
+      buyerName: order.buyer.email.split('@')[0],
       message: order.message,
+      orderDate,
     };
 
     Promise.all([
@@ -196,4 +204,35 @@ async function cancel(req, res, next) {
   return updateOrderStatus(req, res, next, 'CANCELLED', ['PENDING']);
 }
 
-module.exports = { create, getAll, accept, reject, deliver, cancel };
+// POST /api/orders/test-email — [DEV ONLY] send a test confirmation email
+async function sendTestEmail(req, res, next) {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'Not available in production.' });
+  }
+  try {
+    const to = req.body.email || req.user.email;
+    const orderDate = new Date().toLocaleString('es-CO', {
+      timeZone: 'America/Bogota',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    await sendOrderConfirmation(to, {
+      orderId: 'TEST-' + Date.now(),
+      productName: 'Producto de prueba',
+      quantity: 2,
+      sellerName: 'Emprendedor UAO',
+      buyerEmail: to,
+      buyerName: to.split('@')[0],
+      message: 'Este es un mensaje de prueba.',
+      orderDate,
+    });
+    res.json({ success: true, message: `Email de prueba enviado a ${to}` });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, getAll, accept, reject, deliver, cancel, sendTestEmail };

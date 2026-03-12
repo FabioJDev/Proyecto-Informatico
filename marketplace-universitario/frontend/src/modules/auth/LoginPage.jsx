@@ -16,16 +16,11 @@ function EyeIcon({ open }) {
   );
 }
 
-function DiamondLogo() {
+function MLogoMark() {
   return (
-    <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2L18 10L10 18L2 10L10 2Z" fill="url(#loginDiamond)" />
-      <defs>
-        <linearGradient id="loginDiamond" x1="2" y1="2" x2="18" y2="18" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#6C63FF" />
-          <stop offset="1" stopColor="#F59E0B" />
-        </linearGradient>
-      </defs>
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="4" fill="#990100" />
+      <path d="M5 21V7l9 10 9-10v14" stroke="#F6F6F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }
@@ -63,31 +58,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#F6F6F6]">
 
       {/* ── Left decorative panel ── */}
-      <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col justify-between p-12">
-        {/* Animated mesh background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/12 via-[var(--bg-surface)] to-[var(--accent-secondary)]/06" />
-        <div className="absolute inset-0 grid-bg opacity-60" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-[var(--accent-primary)]/08 blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-[var(--accent-secondary)]/08 blur-2xl" />
+      <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col justify-between p-12 bg-white border-r border-[#E8E8E8]">
+        {/* Background patterns */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 80% 20%, rgba(153,1,0,0.06) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(153,1,0,0.04) 0%, transparent 50%)'
+        }} />
+        <div className="absolute inset-0 grid-bg opacity-40" />
 
         {/* Top: brand */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3 mb-16">
-            <DiamondLogo />
-            <span className="font-display font-bold text-[var(--text-primary)] text-lg">MktUni</span>
+            <MLogoMark />
+            <span className="font-display font-bold text-[#1A1A1A] text-lg">MktUni</span>
           </Link>
 
-          <p className="text-xs font-mono text-[var(--accent-primary-soft)] uppercase tracking-widest mb-4">
+          <p className="text-xs font-mono text-[#990100] uppercase tracking-widest mb-4">
             Bienvenido de vuelta
           </p>
-          <h2 className="font-display text-white text-3xl font-bold leading-snug mb-4">
+          <h2 className="font-display text-[#1A1A1A] text-3xl font-extrabold leading-snug mb-4">
             Tu comunidad<br />universitaria<br />
             <span className="gradient-text">está aquí</span>
           </h2>
-          <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xs">
+          <p className="text-[#666666] text-sm leading-relaxed max-w-xs">
             Inicia sesión para acceder al marketplace y conectar con emprendedores de tu universidad.
           </p>
         </div>
@@ -101,53 +96,52 @@ export default function LoginPage() {
           ].map(({ icon, text }, i) => (
             <div
               key={text}
-              className="flex items-center gap-3 glass rounded-xl px-4 py-3 border border-[var(--border-subtle)] animate-in"
+              className="flex items-center gap-3 bg-[#F6F6F6] border border-[#E8E8E8] rounded-xl px-4 py-3 animate-in hover:border-[#990100] transition-colors duration-200"
               style={{ animationDelay: `${0.1 + i * 0.1}s` }}
             >
               <span className="text-xl">{icon}</span>
-              <span className="text-sm text-[var(--text-secondary)]">{text}</span>
+              <span className="text-sm text-[#666666]">{text}</span>
             </div>
           ))}
 
           {/* Social proof */}
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[var(--border-subtle)]">
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#E8E8E8]">
             <div className="flex -space-x-2">
               {['A','B','C','D'].map((l) => (
-                <div key={l} className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center text-[10px] font-bold text-white border-2 border-[var(--bg-surface)]">
+                <div key={l} className="w-7 h-7 rounded-full bg-[#990100] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white">
                   {l}
                 </div>
               ))}
             </div>
-            <p className="text-xs text-[var(--text-muted)]">
-              <span className="text-[var(--text-secondary)] font-medium">+127 estudiantes</span> ya activos
+            <p className="text-xs text-[#999999]">
+              <span className="text-[#333333] font-medium">+127 estudiantes</span> ya activos
             </p>
           </div>
         </div>
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16 relative">
-        <div className="absolute inset-0 bg-[var(--bg-base)]" />
-        <div className="w-full max-w-md relative z-10">
+      <div className="flex-1 flex items-center justify-center px-6 py-16 bg-[#F6F6F6]">
+        <div className="w-full max-w-md">
 
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2.5 mb-10 lg:hidden">
-            <DiamondLogo />
-            <span className="font-display font-bold text-[var(--text-primary)]">MktUni</span>
+            <MLogoMark />
+            <span className="font-display font-bold text-[#1A1A1A]">MktUni</span>
           </Link>
 
           <div className="animate-in">
-            <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-1">
+            <h1 className="font-display text-3xl font-extrabold text-[#1A1A1A] mb-1">
               Iniciar sesión
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm mb-8">
+            <p className="text-[#666666] text-sm mb-8">
               Ingresa con tu correo institucional.
             </p>
           </div>
 
           {/* Success banner */}
           {resetSuccess && (
-            <div className="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-400 flex items-start gap-2 animate-in">
+            <div className="mb-5 p-4 rounded-xl bg-[#D1FAE5] border border-[#6EE7B7] text-sm text-[#065F46] flex items-start gap-2 animate-in">
               <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -157,7 +151,7 @@ export default function LoginPage() {
 
           {/* Error banner */}
           {error && (
-            <div className="mb-5 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400 flex items-start gap-2 animate-in">
+            <div className="mb-5 p-4 rounded-xl bg-[rgba(153,1,0,0.06)] border border-[rgba(153,1,0,0.20)] text-sm text-[#990100] flex items-start gap-2 animate-in">
               <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
@@ -168,7 +162,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5 animate-in delay-1">
             {/* Email */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--text-secondary)]">
+              <label className="text-sm font-medium text-[#666666]">
                 Correo institucional
               </label>
               <input
@@ -181,11 +175,11 @@ export default function LoginPage() {
                 autoComplete="email"
                 className="
                   w-full px-4 py-3 rounded-xl text-sm
-                  bg-[var(--bg-surface)] text-[var(--text-primary)]
-                  border border-[var(--border-subtle)]
-                  placeholder:text-[var(--text-muted)]
-                  hover:border-[var(--border-strong)]
-                  focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+                  bg-white text-[#1A1A1A]
+                  border-[1.5px] border-[#E8E8E8]
+                  placeholder:text-[#999999]
+                  hover:border-[#CCCCCC]
+                  focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
                   transition-all duration-200
                 "
               />
@@ -194,10 +188,10 @@ export default function LoginPage() {
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[var(--text-secondary)]">Contraseña</label>
+                <label className="text-sm font-medium text-[#666666]">Contraseña</label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs text-[var(--accent-primary-soft)] hover:text-[var(--accent-primary)] transition-colors duration-200"
+                  className="text-xs text-[#990100] hover:text-[#B90504] transition-colors duration-200"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -213,18 +207,18 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   className="
                     w-full px-4 py-3 pr-11 rounded-xl text-sm
-                    bg-[var(--bg-surface)] text-[var(--text-primary)]
-                    border border-[var(--border-subtle)]
-                    placeholder:text-[var(--text-muted)]
-                    hover:border-[var(--border-strong)]
-                    focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+                    bg-white text-[#1A1A1A]
+                    border-[1.5px] border-[#E8E8E8]
+                    placeholder:text-[#999999]
+                    hover:border-[#CCCCCC]
+                    focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
                     transition-all duration-200
                   "
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#666666] transition-colors"
                   aria-label={showPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   <EyeIcon open={showPw} />
@@ -238,10 +232,10 @@ export default function LoginPage() {
               disabled={isLoading}
               className="
                 w-full py-3 px-6 rounded-xl
-                text-sm font-semibold text-white
-                bg-gradient-primary
+                text-sm font-semibold text-[#F6F6F6]
+                bg-[#990100]
                 shadow-glow-primary animate-glow-pulse
-                hover:-translate-y-0.5 active:translate-y-0
+                hover:bg-[#B90504] hover:-translate-y-0.5 active:translate-y-0
                 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:animate-none
                 transition-all duration-200
                 flex items-center justify-center gap-2
@@ -254,9 +248,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-[var(--text-muted)] mt-6 animate-in delay-2">
+          <p className="text-center text-sm text-[#999999] mt-6 animate-in delay-2">
             ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-[var(--accent-primary-soft)] font-medium hover:text-[var(--accent-primary)] transition-colors duration-200">
+            <Link to="/register" className="text-[#990100] font-medium hover:text-[#B90504] transition-colors duration-200">
               Regístrate gratis
             </Link>
           </p>

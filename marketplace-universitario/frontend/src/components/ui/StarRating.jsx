@@ -32,16 +32,10 @@ export default function StarRating({ value = 0, onChange, readOnly = false, size
             <svg
               className={`${sizes[size]} transition-all duration-150`}
               viewBox="0 0 24 24"
-              fill={filled ? 'url(#starGrad)' : 'none'}
-              stroke={filled ? 'none' : 'rgba(255,255,255,0.2)'}
+              fill={filled ? '#990100' : 'none'}
+              stroke={filled ? 'none' : '#E8E8E8'}
               strokeWidth={1.5}
             >
-              <defs>
-                <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#F97316" />
-                </linearGradient>
-              </defs>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

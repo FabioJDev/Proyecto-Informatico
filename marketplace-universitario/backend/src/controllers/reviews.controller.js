@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // POST /api/reviews — [COMPRADOR] review a delivered order
 async function create(req, res, next) {

@@ -8,9 +8,9 @@ export default function Pagination({ pagination, onPageChange }) {
   const end   = Math.min(page * limit, total);
 
   return (
-    <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--border-subtle)]">
-      <p className="text-sm text-[var(--text-muted)] font-mono">
-        {start}–{end} <span className="text-[var(--text-muted)]/60">de</span> {total}
+    <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#E8E8E8]">
+      <p className="text-sm text-[#999999] font-mono">
+        {start}–{end} <span className="text-[#CCCCCC]">de</span> {total}
       </p>
       <div className="flex items-center gap-2">
         <Button
@@ -21,7 +21,7 @@ export default function Pagination({ pagination, onPageChange }) {
         >
           ← Anterior
         </Button>
-        <span className="text-sm font-mono text-[var(--text-secondary)] px-2">
+        <span className="text-sm font-mono text-[#666666] px-2">
           {page} / {pages}
         </span>
         <Button

@@ -14,13 +14,13 @@ const STATUS_BADGE = {
   BANNED:    { label: 'Baneado',    color: 'red' },
 };
 
-const darkInput = `
-  px-3 py-2 rounded-xl text-sm
-  bg-[var(--bg-surface)] text-[var(--text-primary)]
-  border border-[var(--border-subtle)]
-  placeholder:text-[var(--text-muted)]
-  hover:border-[var(--border-strong)]
-  focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+const inputClass = `
+  px-4 py-2.5 rounded-xl text-sm
+  bg-white text-[#1A1A1A]
+  border-[1.5px] border-[#E8E8E8]
+  placeholder:text-[#999999]
+  hover:border-[#CCCCCC]
+  focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
   transition-all duration-200
 `;
 
@@ -67,27 +67,27 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
-        <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-8 animate-in">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full flex-1">
+        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-8 animate-in">
           Gestión de usuarios
         </h1>
 
         {/* Filters */}
-        <div className="glass rounded-2xl border border-[var(--border-subtle)] p-4 mb-5 flex flex-wrap gap-3 animate-in delay-1">
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] p-4 mb-5 flex flex-wrap gap-3 animate-in delay-1">
           <input
             type="text"
             placeholder="Buscar por email o nombre…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchUsers(1)}
-            className={`${darkInput} flex-1 min-w-48`}
+            className={`${inputClass} flex-1 min-w-48`}
           />
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className={darkInput}
+            className={inputClass}
           >
             <option value="">Todos los roles</option>
             <option value="EMPRENDEDOR">Emprendedor</option>
@@ -97,7 +97,7 @@ export default function AdminUsersPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className={darkInput}
+            className={inputClass}
           >
             <option value="">Todos los estados</option>
             <option value="ACTIVE">Activo</option>
@@ -107,41 +107,41 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Table */}
-        <div className="glass rounded-2xl border border-[var(--border-subtle)] overflow-hidden animate-in delay-2">
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] overflow-hidden animate-in delay-2">
           {isLoading ? (
-            <div className="divide-y divide-[var(--border-subtle)]">
+            <div className="divide-y divide-[#E8E8E8]">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-16 m-3 rounded-xl skeleton" />
               ))}
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center py-16 text-[var(--text-muted)]">
+            <div className="text-center py-16 text-[#999999] text-sm">
               No se encontraron usuarios.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-[var(--border-subtle)]">
+              <thead className="border-b border-[#E8E8E8] bg-[#F6F6F6]">
                 <tr>
                   {['Usuario', 'Rol', 'Estado', 'Registro', 'Acciones'].map((h, i) => (
                     <th
                       key={h}
-                      className={`px-4 py-3 font-mono text-xs text-[var(--text-muted)] uppercase tracking-wider font-medium text-left ${i === 4 ? 'text-right' : ''} ${h === 'Registro' ? 'hidden sm:table-cell' : ''}`}
+                      className={`px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium text-left ${i === 4 ? 'text-right' : ''} ${h === 'Registro' ? 'hidden sm:table-cell' : ''}`}
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border-subtle)]">
+              <tbody className="divide-y divide-[#E8E8E8]">
                 {users.map((user) => {
                   const s = STATUS_BADGE[user.status] ?? { label: user.status, color: 'gray' };
                   return (
-                    <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={user.id} className="hover:bg-[#F6F6F6] transition-colors">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-[var(--text-primary)] truncate max-w-xs">
+                        <p className="font-semibold text-[#1A1A1A] truncate max-w-xs">
                           {user.profile?.displayName || '—'}
                         </p>
-                        <p className="text-xs text-[var(--text-muted)] truncate">{user.email}</p>
+                        <p className="text-xs text-[#999999] truncate">{user.email}</p>
                       </td>
                       <td className="px-4 py-3">
                         <RoleBadge role={user.role} />
@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-3">
                         <Badge color={s.color}>{s.label}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-xs text-[var(--text-muted)] font-mono hidden sm:table-cell">
+                      <td className="px-4 py-3 text-xs text-[#999999] font-mono hidden sm:table-cell">
                         {formatDate(user.createdAt)}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -158,7 +158,7 @@ export default function AdminUsersPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-amber-400 hover:bg-amber-500/10"
+                              className="text-[#B45309] hover:bg-[#FEF3C7]"
                               onClick={() => setModal({ user, action: 'suspend' })}
                             >
                               Suspender
@@ -167,7 +167,7 @@ export default function AdminUsersPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-emerald-400 hover:bg-emerald-500/10"
+                              className="text-[#065F46] hover:bg-[#D1FAE5]"
                               onClick={() => setModal({ user, action: 'reactivate' })}
                             >
                               Reactivar

@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { uploadProfileImage, deleteFile, BUCKET_PROFILES } = require('../services/storage.service');
-
-const prisma = new PrismaClient();
 
 // GET /api/users — [ADMIN] list all users with pagination
 async function getAll(req, res, next) {
@@ -134,7 +132,7 @@ async function updateProfile(req, res, next) {
 
     const profile = await prisma.profile.upsert({
       where: { userId },
-      create: { userId, businessName: businessName || 'Mi Emprendimiento', ...data },
+      create: { userId, ...data },
       update: data,
     });
 
@@ -144,4 +142,19 @@ async function updateProfile(req, res, next) {
   }
 }
 
-module.exports = { getAll, updateStatus, getProfile, updateProfile };
+// GET /api/users/profile/me — [EMPRENDEDOR] get own profile (for edit form pre-fill)
+async function getMyProfile(req, res, next) {
+  try {
+    const profile = await prisma.profile.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado.' });
+    }
+    res.json({ success: true, profile });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAll, updateStatus, getProfile, updateProfile, getMyProfile };

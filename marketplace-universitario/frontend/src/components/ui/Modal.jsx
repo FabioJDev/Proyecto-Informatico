@@ -30,21 +30,21 @@ export default function Modal({
       {/* Panel */}
       <div className="
         relative z-10 w-full max-w-md
-        glass-strong rounded-2xl
-        border border-[var(--border-strong)]
-        shadow-2xl
+        bg-white rounded-2xl
+        border border-[#E8E8E8]
+        shadow-xl
         p-6
         animate-in
       ">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-lg font-bold text-[var(--text-primary)]">{title}</h3>
+          <h3 className="font-display text-lg font-bold text-[#1A1A1A]">{title}</h3>
           <button
             onClick={onClose}
             className="
               w-8 h-8 rounded-lg flex items-center justify-center
-              text-[var(--text-muted)] hover:text-[var(--text-primary)]
-              hover:bg-white/[0.07]
+              text-[#999999] hover:text-[#333333]
+              hover:bg-[#F6F6F6]
               transition-colors duration-150
             "
             aria-label="Cerrar"
@@ -55,7 +55,7 @@ export default function Modal({
           </button>
         </div>
 
-        <div className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed">
+        <div className="text-sm text-[#666666] mb-6 leading-relaxed">
           {children}
         </div>
 

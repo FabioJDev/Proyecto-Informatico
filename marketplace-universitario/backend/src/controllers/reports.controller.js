@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // GET /api/reports/admin — [ADMIN] global metrics by month (RF-21)
 async function adminReport(req, res, next) {

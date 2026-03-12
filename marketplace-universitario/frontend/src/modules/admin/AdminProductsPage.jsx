@@ -8,6 +8,16 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
+const inputClass = `
+  px-4 py-2.5 rounded-xl text-sm
+  bg-white text-[#1A1A1A]
+  border-[1.5px] border-[#E8E8E8]
+  placeholder:text-[#999999]
+  hover:border-[#CCCCCC]
+  focus:outline-none focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)]
+  transition-all duration-200
+`;
+
 export default function AdminProductsPage() {
   const { addToast } = useToast();
   const [products, setProducts] = useState([]);
@@ -17,7 +27,7 @@ export default function AdminProductsPage() {
   const [keyword, setKeyword] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [deleteModal, setDeleteModal] = useState(null); // product object
+  const [deleteModal, setDeleteModal] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProducts = useCallback((page = 1) => {
@@ -71,25 +81,27 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Moderación de productos</h1>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full flex-1">
+        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-8 animate-in">
+          Moderación de productos
+        </h1>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-5 flex flex-wrap gap-3">
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] p-4 mb-5 flex flex-wrap gap-3 animate-in delay-1">
           <input
             type="text"
             placeholder="Buscar por nombre…"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchProducts(1)}
-            className="flex-1 min-w-48 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            className={`${inputClass} flex-1 min-w-48`}
           />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            className={inputClass}
           >
             <option value="">Todas las categorías</option>
             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -97,7 +109,7 @@ export default function AdminProductsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            className={inputClass}
           >
             <option value="">Todos los estados</option>
             <option value="ACTIVE">Activo</option>
@@ -107,65 +119,75 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Product list */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] overflow-hidden animate-in delay-2">
           {isLoading ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-16 animate-pulse bg-gray-100 rounded-lg" />
+                <div key={i} className="h-16 rounded-xl skeleton" />
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <span className="text-5xl">📦</span>
-              <p className="mt-3">No se encontraron productos.</p>
+            <div className="text-center py-16 text-[#999999]">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[rgba(153,1,0,0.06)] border border-[rgba(153,1,0,0.20)] flex items-center justify-center">
+                <svg className="w-8 h-8 text-[#990100]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+              </div>
+              <p className="text-sm">No se encontraron productos.</p>
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr className="text-left text-gray-500">
-                  <th className="px-4 py-3 font-medium">Producto</th>
-                  <th className="px-4 py-3 font-medium hidden md:table-cell">Vendedor</th>
-                  <th className="px-4 py-3 font-medium hidden sm:table-cell">Precio</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 font-medium hidden lg:table-cell">Publicado</th>
-                  <th className="px-4 py-3 font-medium text-right">Acción</th>
+              <thead className="bg-[#F6F6F6] border-b border-[#E8E8E8]">
+                <tr className="text-left">
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium">Producto</th>
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium hidden md:table-cell">Vendedor</th>
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium hidden sm:table-cell">Precio</th>
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium">Estado</th>
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium hidden lg:table-cell">Publicado</th>
+                  <th className="px-4 py-3 font-mono text-xs text-[#999999] uppercase tracking-wider font-medium text-right">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#E8E8E8]">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={product.id} className="hover:bg-[#F6F6F6] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                          {product.images?.[0]
-                            ? <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
-                            : <span className="flex items-center justify-center h-full text-lg">📦</span>}
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#E8E8E8] shrink-0">
+                          {product.images?.[0] ? (
+                            <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-[#999999]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-800 truncate max-w-xs">{product.name}</p>
-                          <p className="text-xs text-gray-400 truncate">{product.category?.name}</p>
+                          <p className="font-semibold text-[#1A1A1A] truncate max-w-xs">{product.name}</p>
+                          <p className="text-xs text-[#999999] truncate">{product.category?.name}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <p className="text-gray-700 truncate max-w-[160px]">
+                      <p className="text-[#666666] truncate max-w-[160px]">
                         {product.seller?.profile?.displayName || product.seller?.email || '—'}
                       </p>
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800 hidden sm:table-cell">
+                    <td className="px-4 py-3 font-mono font-semibold text-[#990100] hidden sm:table-cell">
                       {formatCurrency(product.price)}
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={statusVariant(product.status)}>{statusLabel(product.status)}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs hidden lg:table-cell">
+                    <td className="px-4 py-3 text-[#999999] text-xs font-mono hidden lg:table-cell">
                       {formatDate(product.createdAt)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-[#990100] hover:bg-[rgba(153,1,0,0.06)]"
                         onClick={() => setDeleteModal(product)}
                       >
                         Eliminar
@@ -183,7 +205,6 @@ export default function AdminProductsPage() {
         </div>
       </main>
 
-      {/* Delete confirmation */}
       <Modal
         isOpen={!!deleteModal}
         onClose={() => setDeleteModal(null)}
@@ -193,8 +214,8 @@ export default function AdminProductsPage() {
         onConfirm={handleDelete}
         isLoading={isDeleting}
       >
-        <p className="text-gray-600">
-          ¿Seguro que deseas eliminar <strong className="text-gray-800">{deleteModal?.name}</strong>?
+        <p>
+          ¿Seguro que deseas eliminar <strong className="text-[#1A1A1A]">{deleteModal?.name}</strong>?
           Esta acción no se puede deshacer y eliminará el producto del catálogo.
         </p>
       </Modal>

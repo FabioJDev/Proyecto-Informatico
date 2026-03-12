@@ -16,4 +16,9 @@ router.patch('/:id/reject', requireRole('EMPRENDEDOR'), ordersController.reject)
 router.patch('/:id/deliver', requireRole('EMPRENDEDOR'), ordersController.deliver);
 router.patch('/:id/cancel', requireRole('COMPRADOR'), ordersController.cancel);
 
+// Dev-only: send a test confirmation email
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/test-email', ordersController.sendTestEmail);
+}
+
 module.exports = router;

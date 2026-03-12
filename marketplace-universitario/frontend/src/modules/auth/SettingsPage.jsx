@@ -8,20 +8,20 @@ export default function SettingsPage() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10 w-full flex-1">
-        <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-8 animate-in">
+        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-8 animate-in">
           Configuración de cuenta
         </h1>
 
-        <div className="glass rounded-2xl border border-[var(--border-subtle)] p-6 space-y-5 animate-in delay-1">
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] p-6 space-y-5 animate-in delay-1 hover:shadow-card-hover transition-shadow duration-200">
           {/* User header */}
           <div className="flex items-center gap-4">
             <div className="
               w-14 h-14 rounded-2xl shrink-0
-              bg-gradient-primary
+              bg-[#990100]
               flex items-center justify-center
               font-display font-bold text-2xl text-white
               shadow-glow-primary
@@ -29,35 +29,35 @@ export default function SettingsPage() {
               {user?.email?.[0]?.toUpperCase()}
             </div>
             <div>
-              <p className="font-semibold text-[var(--text-primary)]">{user?.email}</p>
+              <p className="font-semibold text-[#1A1A1A]">{user?.email}</p>
               <div className="mt-1">
                 <RoleBadge role={user?.role} />
               </div>
             </div>
           </div>
 
-          <div className="border-t border-[var(--border-subtle)]" />
+          <div className="border-t border-[#E8E8E8]" />
 
           {/* Details grid */}
           <dl className="grid grid-cols-2 gap-5 text-sm">
             <div>
-              <dt className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1">Correo</dt>
-              <dd className="font-medium text-[var(--text-primary)]">{user?.email}</dd>
+              <dt className="text-xs font-mono text-[#999999] uppercase tracking-wider mb-1">Correo</dt>
+              <dd className="font-medium text-[#1A1A1A]">{user?.email}</dd>
             </div>
             <div>
-              <dt className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1">Rol</dt>
-              <dd className="font-medium text-[var(--text-primary)]">{user?.role}</dd>
+              <dt className="text-xs font-mono text-[#999999] uppercase tracking-wider mb-1">Rol</dt>
+              <dd className="font-medium text-[#1A1A1A]">{user?.role}</dd>
             </div>
             <div>
-              <dt className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1">Miembro desde</dt>
-              <dd className="font-medium text-[var(--text-primary)]">
+              <dt className="text-xs font-mono text-[#999999] uppercase tracking-wider mb-1">Miembro desde</dt>
+              <dd className="font-medium text-[#1A1A1A]">
                 {user?.createdAt ? formatDate(user.createdAt) : '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1">Estado</dt>
-              <dd className="flex items-center gap-1.5 font-medium text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-dot" />
+              <dt className="text-xs font-mono text-[#999999] uppercase tracking-wider mb-1">Estado</dt>
+              <dd className="flex items-center gap-1.5 font-medium text-[#1A7A4A]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1A7A4A] animate-pulse-dot" />
                 Activo
               </dd>
             </div>

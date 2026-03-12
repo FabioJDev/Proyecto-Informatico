@@ -1,10 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { sendPasswordReset, sendWelcomeEmail } = require('../services/email.service');
-
-const prisma = new PrismaClient();
 const COST_FACTOR = parseInt(process.env.BCRYPT_COST_FACTOR, 10) || 12;
 
 function signToken(user) {

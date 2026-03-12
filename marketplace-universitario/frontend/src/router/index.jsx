@@ -5,13 +5,13 @@ import ProtectedRoute from '../components/layout/ProtectedRoute.jsx';
 import { lazy, Suspense } from 'react';
 
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[#0D0608]">
+  <div className="min-h-screen flex items-center justify-center bg-[#F6F6F6]">
     <div className="flex flex-col items-center gap-4">
       <div
-        className="w-10 h-10 rounded-full border-2 border-transparent animate-spin-ring"
-        style={{ borderTopColor: '#DC1E3C', borderRightColor: 'rgba(220,30,60,0.3)' }}
+        className="w-10 h-10 rounded-full border-[3px] border-[#E8E8E8]"
+        style={{ borderTopColor: '#990100', animation: 'spin 0.8s linear infinite' }}
       />
-      <span className="text-xs font-mono text-[#6B4F56] tracking-widest uppercase">Cargando…</span>
+      <span className="text-xs font-mono text-[#999999] tracking-widest uppercase">Cargando…</span>
     </div>
   </div>
 );
@@ -33,11 +33,13 @@ const SettingsPage = lazy(() => import('../modules/auth/SettingsPage.jsx'));
 const HomePage = lazy(() => import('../modules/catalog/HomePage.jsx'));
 const LandingPage = lazy(() => import('../modules/catalog/LandingPage.jsx'));
 const ProductsPage = lazy(() => import('../modules/catalog/ProductsPage.jsx'));
+const CatalogPage = lazy(() => import('../modules/catalog/CatalogPage.jsx'));
 const ProductDetailPage = lazy(() => import('../modules/catalog/ProductDetailPage.jsx'));
 
 // Profile
 const ProfilePage = lazy(() => import('../modules/profile/ProfilePage.jsx'));
 const EditProfilePage = lazy(() => import('../modules/profile/EditProfilePage.jsx'));
+const CreateProfilePage = lazy(() => import('../modules/profile/CreateProfilePage.jsx'));
 
 // Orders / Dashboard
 const MyOrdersPage = lazy(() => import('../modules/orders/MyOrdersPage.jsx'));
@@ -59,6 +61,7 @@ export const router = createBrowserRouter([
   { path: '/register', element: wrap(RegisterPage) },
   { path: '/forgot-password', element: wrap(ForgotPasswordPage) },
   { path: '/reset-password', element: wrap(ResetPasswordPage) },
+  { path: '/catalog', element: wrap(CatalogPage) },
   { path: '/products', element: wrap(ProductsPage) },
   { path: '/products/:id', element: wrap(ProductDetailPage) },
   { path: '/profile/:id', element: wrap(ProfilePage) },
@@ -86,6 +89,7 @@ export const router = createBrowserRouter([
       { path: '/my-products/new', element: wrap(NewProductPage) },
       { path: '/my-products/:id/edit', element: wrap(EditProductPage) },
       { path: '/seller-orders', element: wrap(SellerOrdersPage) },
+      { path: '/profile/create', element: wrap(CreateProfilePage) },
       { path: '/profile/edit', element: wrap(EditProfilePage) },
     ],
   },

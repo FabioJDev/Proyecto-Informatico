@@ -7,10 +7,10 @@ import { OrderBadge } from '../../components/ui/Badge.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 const STAT_PALETTE = {
-  primary: { bg: 'bg-[var(--accent-primary-dim)]', border: 'border-[var(--accent-primary)]/20', text: 'text-[var(--accent-primary-soft)]', icon: 'text-[var(--accent-primary-soft)]' },
-  amber:   { bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   text: 'text-amber-400',   icon: 'text-amber-400' },
-  emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', icon: 'text-emerald-400' },
-  slate:   { bg: 'bg-white/[0.04]',   border: 'border-white/10',       text: 'text-[var(--text-primary)]', icon: 'text-[var(--text-muted)]' },
+  primary: { bg: 'bg-white', border: 'border-[#E8E8E8]', text: 'text-[#990100]',  icon: 'text-[#990100]' },
+  amber:   { bg: 'bg-white', border: 'border-[#E8E8E8]', text: 'text-[#B45309]',  icon: 'text-[#B45309]' },
+  emerald: { bg: 'bg-white', border: 'border-[#E8E8E8]', text: 'text-[#1A7A4A]',  icon: 'text-[#1A7A4A]' },
+  slate:   { bg: 'bg-white', border: 'border-[#E8E8E8]', text: 'text-[#1A1A1A]',  icon: 'text-[#999999]' },
 };
 
 function StatCard({ label, value, color = 'primary', icon }) {
@@ -18,11 +18,11 @@ function StatCard({ label, value, color = 'primary', icon }) {
   return (
     <div className={`
       rounded-2xl border p-5 transition-all duration-300
-      hover:border-opacity-60 hover:-translate-y-0.5
+      hover:-translate-y-0.5 hover:shadow-card-hover
       ${p.bg} ${p.border}
     `}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-mono text-[#999999] uppercase tracking-wider">{label}</p>
         {icon && <span className={`${p.icon}`}>{icon}</span>}
       </div>
       <p className={`font-display text-3xl font-bold ${p.text}`}>{value ?? 0}</p>
@@ -32,10 +32,10 @@ function StatCard({ label, value, color = 'primary', icon }) {
 
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+    <div className="min-h-screen flex items-center justify-center bg-[#F6F6F6]">
       <div
         className="w-10 h-10 rounded-full border-2 border-transparent animate-spin-ring"
-        style={{ borderTopColor: '#6C63FF', borderRightColor: 'rgba(108,99,255,0.3)' }}
+        style={{ borderTopColor: '#990100', borderRightColor: 'rgba(153,1,0,0.2)' }}
       />
     </div>
   );
@@ -56,21 +56,21 @@ export default function DashboardPage() {
   const s = data?.summary || {};
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 w-full space-y-8">
 
         {/* Header */}
         <div className="flex items-center justify-between animate-in">
           <div>
-            <h1 className="font-display text-3xl font-bold text-[var(--text-primary)]">Dashboard</h1>
+            <h1 className="font-display text-3xl font-bold text-[#1A1A1A]">Dashboard</h1>
             {data?.profile?.businessName && (
-              <p className="text-[var(--text-muted)] mt-1 text-sm">{data.profile.businessName}</p>
+              <p className="text-[#999999] mt-1 text-sm">{data.profile.businessName}</p>
             )}
           </div>
           <Link
             to="/my-products/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-primary shadow-glow-primary animate-glow-pulse hover:-translate-y-0.5 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#990100] shadow-glow-primary animate-glow-pulse hover:bg-[#B90504] hover:-translate-y-0.5 transition-all duration-200"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -109,13 +109,13 @@ export default function DashboardPage() {
 
         {/* Rating */}
         {s.averageRating && (
-          <div className="glass rounded-2xl border border-amber-500/20 p-5 flex items-center gap-5 animate-in delay-2">
-            <div className="font-display text-4xl font-bold text-amber-400 font-mono">
+          <div className="bg-white rounded-2xl border border-[#E8E8E8] p-5 flex items-center gap-5 animate-in delay-2 hover:shadow-card-hover transition-shadow duration-200">
+            <div className="font-display text-4xl font-bold text-[#990100] font-mono">
               {s.averageRating}
             </div>
             <div>
               <StarRating value={Math.round(s.averageRating)} readOnly />
-              <p className="text-sm text-[var(--text-muted)] mt-1">{s.totalReviews} reseñas</p>
+              <p className="text-sm text-[#999999] mt-1">{s.totalReviews} reseñas</p>
             </div>
           </div>
         )}
@@ -124,8 +124,8 @@ export default function DashboardPage() {
         {data?.recentOrders?.length > 0 && (
           <div className="animate-in delay-3">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-bold text-[var(--text-primary)]">Pedidos recientes</h2>
-              <Link to="/seller-orders" className="text-sm text-[var(--accent-primary-soft)] hover:text-[var(--accent-primary)] transition-colors">
+              <h2 className="font-display font-bold text-[#1A1A1A]">Pedidos recientes</h2>
+              <Link to="/seller-orders" className="text-sm text-[#990100] hover:text-[#B90504] transition-colors">
                 Ver todos →
               </Link>
             </div>
@@ -133,17 +133,17 @@ export default function DashboardPage() {
               {data.recentOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="glass rounded-xl border border-[var(--border-subtle)] p-4 flex items-center justify-between hover:border-[var(--border-strong)] transition-colors"
+                  className="bg-white rounded-xl border border-[#E8E8E8] p-4 flex items-center justify-between hover:border-[#CCCCCC] hover:shadow-card-hover transition-all duration-200"
                 >
                   <div>
-                    <p className="font-medium text-sm text-[var(--text-primary)]">{order.product?.name}</p>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    <p className="font-medium text-sm text-[#1A1A1A]">{order.product?.name}</p>
+                    <p className="text-xs text-[#999999] mt-0.5">
                       {order.buyer?.email} · {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     {order.product?.price && (
-                      <span className="text-sm font-mono font-semibold text-amber-400">
+                      <span className="text-sm font-mono font-semibold text-[#990100]">
                         {formatCurrency(order.product.price)}
                       </span>
                     )}

@@ -101,11 +101,11 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F6F6F6]">
       <Navbar />
 
       {/* ── HERO — asymmetric 65/35 ── */}
-      <section className="relative overflow-hidden grid-bg py-24 sm:py-32 px-4">
+      <section className="relative overflow-hidden grid-bg bg-[#F6F6F6] py-24 sm:py-32 px-4">
         {/* Faded watermark */}
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
@@ -269,15 +269,14 @@ export default function HomePage() {
       {!isAuthenticated && (
         <section className="px-4 pb-24">
           <div
-            className="max-w-3xl mx-auto glass border border-[var(--accent-primary)]/20 p-12 text-center relative overflow-hidden"
+            className="max-w-3xl mx-auto bg-[#333333] p-12 text-center relative overflow-hidden"
             style={{ borderRadius: '4px 24px 4px 24px' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/05 to-[var(--accent-secondary)]/05 pointer-events-none" />
             <div className="relative z-10">
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-3">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white mb-3">
                 ¿Tienes un emprendimiento?
               </h2>
-              <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
+              <p className="text-[#CCCCCC] mb-8 max-w-md mx-auto">
                 Publica tus productos y llega a toda la comunidad universitaria sin comisiones.
               </p>
               <Link
