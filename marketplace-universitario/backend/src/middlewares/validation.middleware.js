@@ -5,6 +5,7 @@ const { validationResult } = require('express-validator');
  * If there are validation errors, returns 422 with details.
  * Otherwise calls next().
  */
+// basically DTOs.:b
 function validate(req, res, next) {
   const errors = validationResult(req);
 

@@ -10,14 +10,8 @@ const createProductValidation = [
     .trim()
     .isLength({ max: 1000 }).withMessage('La descripción no puede superar 1000 caracteres.'),
   body('price')
-    .notEmpty().withMessage('El precio es obligatorio y debe ser mayor a $0')
-    .custom((value) => {
-      const num = parseFloat(value);
-      if (isNaN(num) || num <= 0) {
-        throw new Error('El precio debe ser un valor positivo mayor a cero');
-      }
-      return true;
-    })
+    .notEmpty().withMessage('El precio es obligatorio')
+    .isFloat({ min: 50, max: 100000000 }).withMessage('El precio debe ser entre $50 y $100,000,000.')
     .toFloat(),
   body('categoryId')
     .notEmpty().withMessage('Debes seleccionar una categoría')
@@ -32,15 +26,15 @@ const updateProductValidation = [
     .optional()
     .trim()
     .escape()
-    .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres.'),
+    .isLength({ min: 3, max: 150 }).withMessage('El nombre debe tener entre 3 y 150 caracteres.'),
   body('description')
     .optional()
     .trim()
     .escape()
-    .isLength({ min: 10, max: 1000 }).withMessage('La descripción debe tener entre 10 y 1000 caracteres.'),
+    .isLength({ min: 0, max: 1000 }).withMessage('La descripción no puede superar 1000 caracteres.'),
   body('price')
     .optional()
-    .isFloat({ min: 0.01 }).withMessage('El precio debe ser un número positivo.')
+    .isFloat({ min: 50, max: 100000000 }).withMessage('El precio debe ser entre $50 y $100,000,000.')
     .toFloat(),
   body('categoryId')
     .optional()
