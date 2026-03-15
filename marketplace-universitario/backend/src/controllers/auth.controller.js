@@ -24,7 +24,7 @@ function setCookieAndRespond(res, token, user) {
   return res.json({
     success: true,
     message: 'Autenticación exitosa.',
-    user: { id: user.id, email: user.email, role: user.role, status: user.status },
+    user: { id: user.id, email: user.email, role: user.role, status: user.status, profile: user.profile },
   });
 }
 
@@ -41,6 +41,7 @@ async function register(req, res, next) {
     const passwordHash = await bcrypt.hash(password, COST_FACTOR);
     const user = await prisma.user.create({
       data: { email, passwordHash, role },
+      include: { profile: true },
     });
 
     // Fire-and-forget: do not let email failure break registration (RNF)
@@ -60,7 +61,7 @@ async function login(req, res, next) {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
     }
