@@ -19,7 +19,7 @@ export function useOrders(params = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, []); // eslint-disable-line
+  }, []);
 
   useEffect(() => {
     fetchOrders();

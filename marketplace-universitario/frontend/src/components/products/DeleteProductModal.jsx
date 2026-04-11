@@ -8,7 +8,7 @@ export default function DeleteProductModal({ product, isOpen, onClose, onDeleted
   // Reset error state when modal opens or closes
   useEffect(() => {
     if (!isOpen) resetError();
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {

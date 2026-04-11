@@ -158,7 +158,6 @@ export default function ProfileForm({
       setPhotoPreview(photoUrl);
     }
     if (contactInfo) setContactOpen(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues.businessName, initialValues.description, initialValues.contactInfo, initialValues.photoUrl]);
 
   // Revoke blob URL on unmount
