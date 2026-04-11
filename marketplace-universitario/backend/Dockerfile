@@ -1,20 +1,23 @@
 FROM node:20-slim
 
-# Instalar OpenSSL (requerido por Prisma en produccion)
+# Instalar OpenSSL 3 (requerido por Prisma en Debian)
 RUN apt-get update -y && \
     apt-get install -y openssl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Instalar dependencias (cache layer)
+# Copiar manifiestos y schema de Prisma
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --omit=dev
+# Instalar TODAS las dependencias (incluyendo dev para prisma CLI)
+RUN npm ci
+
+# Generar cliente Prisma con el binary correcto para Debian/OpenSSL 3
 RUN npx prisma generate
 
-# Copiar codigo fuente
+# Copiar el resto del codigo fuente
 COPY . .
 
 EXPOSE 3001
