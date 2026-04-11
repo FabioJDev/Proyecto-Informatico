@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:20.19.1-slim
 
 # Instalar OpenSSL 3 (requerido por Prisma en Debian)
 RUN apt-get update -y && \
