@@ -10,6 +10,7 @@ const {
   createProductValidation,
   updateProductValidation,
   catalogQueryValidation,
+  updateProductStatusValidation,
 } = require('../middlewares/validators/products.validators');
 
 // Multer — memory storage (files go to Supabase, not disk)
@@ -48,6 +49,16 @@ router.put(
   updateProductValidation,
   validate,
   productsController.update
+);
+
+// [ADMIN] Change product status (disable/enable)
+router.patch(
+  '/:id/status',
+  verifyJWT,
+  requireRole('ADMIN'),
+  updateProductStatusValidation,
+  validate,
+  productsController.updateStatus
 );
 
 router.delete('/:id', verifyJWT, requireRole('EMPRENDEDOR', 'ADMIN'), productsController.remove);

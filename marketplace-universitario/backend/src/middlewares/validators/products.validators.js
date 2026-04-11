@@ -59,4 +59,11 @@ const catalogQueryValidation = [
   query('orderBy').optional().trim().isIn(['recent', 'price_asc', 'price_desc']).withMessage('Orden inválido.'),
 ];
 
-module.exports = { createProductValidation, updateProductValidation, catalogQueryValidation };
+const updateProductStatusValidation = [
+  param('id').notEmpty().withMessage('ID de producto requerido.').trim(),
+  body('status')
+    .notEmpty().withMessage('El estado es obligatorio.')
+    .isIn(['ACTIVE', 'INACTIVE']).withMessage('Estado inválido. Solo ACTIVE o INACTIVE.'),
+];
+
+module.exports = { createProductValidation, updateProductValidation, catalogQueryValidation, updateProductStatusValidation };
