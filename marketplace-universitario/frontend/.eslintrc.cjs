@@ -16,6 +16,7 @@ module.exports = {
     'react-refresh/only-export-components': 'off',
     'react/prop-types': 'off',
     'react/no-unescaped-entities': 'off',
+    'react-hooks/exhaustive-deps': 'off',
     'no-unused-vars': 'off',
   },
 }
