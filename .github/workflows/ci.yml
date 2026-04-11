@@ -84,21 +84,14 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-
-      - name: Instalar Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy a Railway
+      - name: Trigger Railway redeploy via API
         run: |
-          railway up \
-            --service 697c16ba-77d7-44bf-856a-2a08a1ffc079 \
-            --environment production \
-            --detach
-        working-directory: marketplace-universitario/backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          curl -s -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"697c16ba-77d7-44bf-856a-2a08a1ffc079\", environmentId: \"a7294098-0cc1-4462-8171-8f232001dde9\") }"}' \
+            | grep -o '"serviceInstanceDeploy":[a-z]*'
+          echo " — Deploy disparado en Railway"
 
   deploy-frontend:
     name: Deploy → Vercel
@@ -115,11 +108,7 @@ jobs:
 
       - name: Deploy a Vercel (producción)
         run: |
-          vercel deploy \
-            --prod \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes
-        working-directory: marketplace-universitario/frontend
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
