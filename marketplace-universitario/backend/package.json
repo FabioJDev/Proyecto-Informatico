@@ -5,6 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "postinstall": "prisma generate",
     "dev": "kill-port 3001 && nodemon src/server.js",
     "test": "jest --coverage --forceExit",
     "test:watch": "jest --watch",
