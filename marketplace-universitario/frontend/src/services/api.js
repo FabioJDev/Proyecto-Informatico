@@ -35,7 +35,12 @@ api.interceptors.response.use(
       const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
       const onPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
 
-      if (!onPublicPage) {
+      // Never redirect on /auth/me — it's the session probe used by checkAuth()
+      // and can race with a just-completed login (the request was sent before the
+      // cookie existed, so it legitimately 401s even when the user IS logged in).
+      const isAuthProbe = error.config?.url?.includes('/auth/me');
+
+      if (!onPublicPage && !isAuthProbe) {
         // Session expired on a protected page → clear state and go to login
         import('../store/authStore.js').then(({ useAuthStore }) => {
           useAuthStore.getState().logout();
