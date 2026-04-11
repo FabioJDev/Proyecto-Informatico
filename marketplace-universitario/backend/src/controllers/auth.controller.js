@@ -24,6 +24,7 @@ function setCookieAndRespond(res, token, user) {
   return res.json({
     success: true,
     message: 'Autenticación exitosa.',
+    token, // also returned in body for cross-domain Bearer auth
     user: { id: user.id, email: user.email, role: user.role, status: user.status, profile: user.profile },
   });
 }

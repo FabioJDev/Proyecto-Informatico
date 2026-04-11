@@ -5,7 +5,14 @@ const jwt = require('jsonwebtoken');
  * Sets req.user = { id, email, role }
  */
 function verifyJWT(req, res, next) {
-  const token = req.cookies?.jwt;
+  // Accept Bearer token from Authorization header (cross-domain) or httpOnly cookie (same-domain)
+  let token = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else {
+    token = req.cookies?.jwt;
+  }
 
   if (!token) {
     return res.status(401).json({

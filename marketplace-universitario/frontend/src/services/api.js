@@ -11,6 +11,11 @@ const api = axios.create({
 // ─────────────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
+    // Attach Bearer token from localStorage for cross-domain auth
+    const token = localStorage.getItem('mu_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     // For multipart/form-data, let the browser set the Content-Type
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
@@ -30,18 +35,12 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || 'Error de conexión. Intenta de nuevo.';
 
     if (status === 401) {
-      // Pages where the user is intentionally unauthenticated — never redirect away.
-      // checkAuth() fires on every app load and will 401 on these pages by design.
       const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
       const onPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
 
-      // Never redirect on /auth/me — it's the session probe used by checkAuth()
-      // and can race with a just-completed login (the request was sent before the
-      // cookie existed, so it legitimately 401s even when the user IS logged in).
-      const isAuthProbe = error.config?.url?.includes('/auth/me');
-
-      if (!onPublicPage && !isAuthProbe) {
-        // Session expired on a protected page → clear state and go to login
+      if (!onPublicPage) {
+        // Token expired or invalid — clear stored token and redirect to login
+        localStorage.removeItem('mu_token');
         import('../store/authStore.js').then(({ useAuthStore }) => {
           useAuthStore.getState().logout();
         });
