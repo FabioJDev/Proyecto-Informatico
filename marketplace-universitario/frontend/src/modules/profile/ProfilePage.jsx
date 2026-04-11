@@ -6,6 +6,7 @@ import Navbar from '../../components/layout/Navbar.jsx';
 import Footer from '../../components/layout/Footer.jsx';
 import ProductCard from '../../components/ui/ProductCard.jsx';
 import StarRating from '../../components/ui/StarRating.jsx';
+import ReviewsSection from '../reviews/ReviewsSection.jsx';
 import { formatDate } from '../../utils/formatters.js';
 
 export default function ProfilePage() {
@@ -13,7 +14,6 @@ export default function ProfilePage() {
   const currentUser = useAuthStore((s) => s.user);
   const isOwner = currentUser?.id === id && currentUser?.role === 'EMPRENDEDOR';
   const [user, setUser] = useState(null);
-  const [reviews, setReviews] = useState({ reviews: [], averageRating: null, totalReviews: 0, profile: null });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -21,14 +21,6 @@ export default function ProfilePage() {
       .then((res) => setUser(res.data.data))
       .finally(() => setIsLoading(false));
   }, [id]);
-
-  useEffect(() => {
-    if (user?.profile?.id) {
-      api.get(`/reviews/profile/${user.profile.id}`)
-        .then((res) => setReviews(res.data.data))
-        .catch(() => {});
-    }
-  }, [user]);
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F6F6F6]">
@@ -82,18 +74,7 @@ export default function ProfilePage() {
             </div>
             {profile?.description && <p className="text-[#666666] mt-2 leading-relaxed">{profile.description}</p>}
             {profile?.contactInfo && <p className="text-sm text-[#999999] mt-1">📞 {profile.contactInfo}</p>}
-            <div className="flex items-center gap-4 mt-3">
-              {reviews.averageRating && (
-                <div className="flex items-center gap-2">
-                  <StarRating value={Math.round(reviews.averageRating)} readOnly size="sm" />
-                  <span className="text-sm font-mono font-semibold text-[#990100]">
-                    {reviews.averageRating}
-                  </span>
-                  <span className="text-sm text-[#999999]">({reviews.totalReviews} reseñas)</span>
-                </div>
-              )}
-              <span className="text-sm text-[#999999] font-mono">Miembro desde {formatDate(user.createdAt)}</span>
-            </div>
+            <p className="text-sm text-[#999999] font-mono mt-3">Miembro desde {formatDate(user.createdAt)}</p>
           </div>
         </div>
 
@@ -108,26 +89,10 @@ export default function ProfilePage() {
         )}
 
         {/* Reviews */}
-        {reviews.reviews.length > 0 && (
+        {profile?.id && (
           <div className="animate-in delay-2">
             <h2 className="font-display text-xl font-bold text-[#1A1A1A] mb-4">Reseñas</h2>
-            <div className="space-y-4">
-              {reviews.reviews.map((review) => (
-                <div key={review.id} className="bg-white rounded-xl border border-[#E8E8E8] p-4 hover:border-[#CCCCCC] transition-colors duration-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-[#333333]">{review.reviewer?.email}</span>
-                    <span className="text-xs text-[#999999] font-mono">{formatDate(review.createdAt)}</span>
-                  </div>
-                  <div className="mt-1">
-                    <StarRating value={review.rating} readOnly size="sm" />
-                  </div>
-                  {review.comment && <p className="text-sm text-[#666666] mt-2 leading-relaxed">{review.comment}</p>}
-                  {review.order?.product?.name && (
-                    <p className="text-xs text-[#999999] mt-1 font-mono">Producto: {review.order.product.name}</p>
-                  )}
-                </div>
-              ))}
-            </div>
+            <ReviewsSection profileId={profile.id} />
           </div>
         )}
       </main>
