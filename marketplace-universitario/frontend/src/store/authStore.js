@@ -13,7 +13,13 @@ export const useAuthStore = create((set, get) => ({
       const res = await api.get('/auth/me');
       set({ user: res.data.user, isAuthenticated: true, isLoading: false });
     } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      // If login() already completed while this request was in-flight, the user
+      // is now authenticated. Don't overwrite a freshly established session.
+      if (!get().isAuthenticated) {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 
