@@ -1,5 +1,13 @@
 require('dotenv').config();
 
+// Fail fast if critical env vars are missing
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'FRONTEND_URL'];
+const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+if (missing.length > 0 && process.env.NODE_ENV !== 'test') {
+  console.error('❌ Missing required environment variables:', missing.join(', '));
+  process.exit(1);
+}
+
 const app = require('./app');
 const prisma = require('./lib/prisma');
 

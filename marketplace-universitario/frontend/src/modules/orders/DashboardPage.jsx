@@ -48,6 +48,7 @@ export default function DashboardPage() {
   useEffect(() => {
     api.get('/reports/entrepreneur')
       .then((res) => setData(res.data.data))
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
 

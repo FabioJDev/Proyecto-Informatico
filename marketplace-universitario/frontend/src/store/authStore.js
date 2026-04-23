@@ -53,8 +53,15 @@ export const useAuthStore = create((set, get) => ({
       await api.post('/auth/logout');
     } finally {
       localStorage.removeItem(TOKEN_KEY);
-      set({ user: null, isAuthenticated: false, token: null });
+      set({ user: null, isAuthenticated: false, token: null, isLoading: false });
     }
+  },
+
+  // Called by the 401 interceptor — clears local session without hitting the API.
+  // ProtectedRoute re-renders automatically via Zustand subscription and redirects.
+  clearSession: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    set({ user: null, isAuthenticated: false, token: null, isLoading: false });
   },
 
   updateUser: (updates) => {
