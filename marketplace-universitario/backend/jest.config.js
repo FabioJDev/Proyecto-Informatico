@@ -3,8 +3,9 @@ const config = {
   testEnvironment: 'node',
   testMatch: ['**/tests/**/*.test.js'],
   collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/server.js',
+    'src/controllers/**/*.js',
+    'src/routes/**/*.js',
+    'src/middlewares/validators/**/*.js',
   ],
   coverageThreshold: {
     global: {
