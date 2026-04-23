@@ -13,14 +13,43 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
-  # CI — Backend: lint + unit tests con cobertura ≥ 70%
+  # CI — Backend: lint + tests de integración con cobertura ≥ 70%
   # ─────────────────────────────────────────────────────────────────────────────
   test-backend:
     name: Backend — Tests y Cobertura
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: marketplace-universitario/backend
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+      DIRECT_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+      SUPABASE_URL: https://placeholder.supabase.co
+      SUPABASE_ANON_KEY: placeholder-anon-key
+      JWT_SECRET: placeholder-secret-minimum-32-characters-long
+      JWT_EXPIRES_IN: 8h
+      BCRYPT_COST_FACTOR: '4'
+      FRONTEND_URL: http://localhost:5173
+      RESEND_API_KEY: placeholder-resend-key
+      EMAIL_FROM: noreply@placeholder.com
 
     steps:
       - name: Checkout código
@@ -36,22 +65,17 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Generar Prisma Client
+        run: npx prisma generate
+
+      - name: Aplicar migraciones a la BD de test
+        run: npx prisma migrate deploy
+
       - name: Lint (ESLint)
         run: npm run lint --if-present
 
-      - name: Tests unitarios con cobertura
+      - name: Tests con cobertura
         run: npm test -- --coverage --forceExit
-        env:
-          NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
-          SUPABASE_URL: https://placeholder.supabase.co
-          SUPABASE_ANON_KEY: placeholder-anon-key
-          JWT_SECRET: placeholder-secret-minimum-32-characters-long
-          JWT_EXPIRES_IN: 8h
-          BCRYPT_COST_FACTOR: '4'
-          FRONTEND_URL: http://localhost:5173
-          RESEND_API_KEY: placeholder-resend-key
-          EMAIL_FROM: noreply@placeholder.com
 
       - name: Subir reporte de cobertura
         uses: actions/upload-artifact@v4
@@ -131,9 +155,7 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Deploy a Vercel (producción)
-        run: |
-          cd marketplace-universitario/frontend
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
