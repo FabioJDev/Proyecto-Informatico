@@ -7,11 +7,13 @@ const { retryWithBackoff } = require('../utils/retryWithBackoff');
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT, 10),
-  secure: false,
+  secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // ─────────────────────────────────────────────
