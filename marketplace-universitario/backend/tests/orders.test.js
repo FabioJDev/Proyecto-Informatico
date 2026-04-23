@@ -230,3 +230,52 @@ describe('PATCH /api/orders/:id/reject', () => {
     expect(res.body.data.status).toBe('REJECTED');
   });
 });
+
+// ─────────────────────────────────────────────
+// GET /api/orders
+// ─────────────────────────────────────────────
+describe('GET /api/orders', () => {
+  test('✓ [COMPRADOR] lista sus pedidos', async () => {
+    const res = await request(app).get('/api/orders').set('Cookie', buyerCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.pagination).toBeDefined();
+  });
+
+  test('✓ [EMPRENDEDOR] lista sus ventas', async () => {
+    const res = await request(app).get('/api/orders').set('Cookie', sellerCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ sin autenticación retorna 401', async () => {
+    const res = await request(app).get('/api/orders');
+    expect(res.status).toBe(401);
+  });
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/orders/:id/deliver
+// ─────────────────────────────────────────────
+describe('PATCH /api/orders/:id/deliver', () => {
+  test('✓ [EMPRENDEDOR] entrega pedido ACCEPTED', async () => {
+    const res = await request(app)
+      .patch(`/api/orders/${acceptedOrderId}/deliver`)
+      .set('Cookie', sellerCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.status).toBe('DELIVERED');
+  });
+
+  test('✓ [COMPRADOR] no puede entregar pedidos (403)', async () => {
+    const res = await request(app)
+      .patch(`/api/orders/${orderId}/deliver`)
+      .set('Cookie', buyerCookie);
+
+    expect(res.status).toBe(403);
+  });
+});

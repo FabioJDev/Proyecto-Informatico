@@ -225,6 +225,33 @@ describe('POST /api/auth/logout', () => {
 });
 
 // ─────────────────────────────────────────────
+// GET /api/auth/me
+// ─────────────────────────────────────────────
+describe('GET /api/auth/me', () => {
+  let authCookie;
+
+  beforeAll(async () => {
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: INSTITUTIONAL_EMAIL,
+      password: PASSWORD,
+    });
+    authCookie = loginRes.headers['set-cookie'];
+  });
+
+  test('✓ retorna datos del usuario autenticado', async () => {
+    const res = await request(app).get('/api/auth/me').set('Cookie', authCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.user.email).toBe(INSTITUTIONAL_EMAIL);
+  });
+
+  test('✓ sin autenticación retorna 401', async () => {
+    const res = await request(app).get('/api/auth/me');
+    expect(res.status).toBe(401);
+  });
+});
+
+// ─────────────────────────────────────────────
 // POST /api/auth/forgot-password
 // ─────────────────────────────────────────────
 describe('POST /api/auth/forgot-password', () => {

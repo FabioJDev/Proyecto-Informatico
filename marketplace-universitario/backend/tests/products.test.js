@@ -200,3 +200,94 @@ describe('GET /api/products/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ─────────────────────────────────────────────
+// GET /api/products/categories
+// ─────────────────────────────────────────────
+describe('GET /api/products/categories', () => {
+  test('✓ retorna lista de categorías sin autenticación', async () => {
+    const res = await request(app).get('/api/products/categories');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────
+// PUT /api/products/:id
+// ─────────────────────────────────────────────
+describe('PUT /api/products/:id', () => {
+  test('✓ [EMPRENDEDOR] actualiza su propio producto', async () => {
+    if (!productId) return;
+
+    const res = await request(app)
+      .put(`/api/products/${productId}`)
+      .set('Cookie', entrepreneurCookie)
+      .field('name', 'Updated Product Name')
+      .field('description', 'Updated description for testing')
+      .field('price', '30000');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.name).toBe('Updated Product Name');
+  });
+
+  test('✓ [COMPRADOR] no puede actualizar (403)', async () => {
+    if (!productId) return;
+
+    const res = await request(app)
+      .put(`/api/products/${productId}`)
+      .set('Cookie', buyerCookie)
+      .field('name', 'Should fail');
+
+    expect(res.status).toBe(403);
+  });
+
+  test('✓ sin autenticación retorna 401', async () => {
+    const res = await request(app).put('/api/products/someid').send({ name: 'fail' });
+    expect(res.status).toBe(401);
+  });
+});
+
+// ─────────────────────────────────────────────
+// DELETE /api/products/:id
+// ─────────────────────────────────────────────
+describe('DELETE /api/products/:id', () => {
+  let deleteProductId;
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post('/api/products')
+      .set('Cookie', entrepreneurCookie)
+      .field('name', 'Product To Delete')
+      .field('description', 'This product will be deleted in the test')
+      .field('price', '5000')
+      .field('categoryId', categoryId);
+    deleteProductId = res.body.data?.id;
+  });
+
+  test('✓ [EMPRENDEDOR] elimina su propio producto', async () => {
+    if (!deleteProductId) return;
+
+    const res = await request(app)
+      .delete(`/api/products/${deleteProductId}`)
+      .set('Cookie', entrepreneurCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ 404 para producto inexistente', async () => {
+    const res = await request(app)
+      .delete('/api/products/nonexistentproductid123')
+      .set('Cookie', entrepreneurCookie);
+
+    expect(res.status).toBe(404);
+  });
+
+  test('✓ sin autenticación retorna 401', async () => {
+    const res = await request(app).delete('/api/products/someid');
+    expect(res.status).toBe(401);
+  });
+});
