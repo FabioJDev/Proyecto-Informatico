@@ -1,34 +1,22 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
-// ─────────────────────────────────────────────
-// Transporter — Gmail SMTP
-// ─────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT, 10),
-  secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 10000,
-  socketTimeout: 10000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─────────────────────────────────────────────
 // Internal send helper with retry (RNF-11)
 // ─────────────────────────────────────────────
 async function sendEmail(to, subject, html, text) {
-  const from = `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.EMAIL_FROM}>`;
+  const from = `${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'} <${process.env.EMAIL_FROM}>`;
 
   return retryWithBackoff(
     async () => {
-      const mailData = { from, to, subject, html };
-      if (text) mailData.text = text;
-      const info = await transporter.sendMail(mailData);
-      console.log(`📧 Email enviado a: ${to} — MessageId: ${info.messageId}`);
-      return info;
+      const payload = { from, to, subject, html };
+      if (text) payload.text = text;
+      const { data, error } = await resend.emails.send(payload);
+      if (error) throw new Error(error.message || JSON.stringify(error));
+      console.log(`📧 Email enviado a: ${to} — id: ${data.id}`);
+      return data;
     },
     3,
     500
