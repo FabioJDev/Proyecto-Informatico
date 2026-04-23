@@ -12,7 +12,7 @@ const generalLimiter = rateLimit({
     success: false,
     message: 'Demasiadas solicitudes desde esta IP. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (_req) => process.env.NODE_ENV === 'test',
 });
 
 /**
@@ -28,7 +28,7 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Demasiados intentos de autenticación. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (_req) => process.env.NODE_ENV === 'test',
 });
 
 /**
@@ -43,7 +43,7 @@ const uploadLimiter = rateLimit({
     success: false,
     message: 'Límite de subidas alcanzado. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (_req) => process.env.NODE_ENV === 'test',
 });
 
 module.exports = { generalLimiter, authLimiter, uploadLimiter };

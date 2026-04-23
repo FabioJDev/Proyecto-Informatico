@@ -4,7 +4,7 @@
  *
  * Usage: place as the LAST middleware in app.js
  */
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, _next) {
   // Normalize status code
   let status = err.status || err.statusCode || 500;
 

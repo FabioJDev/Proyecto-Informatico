@@ -9,7 +9,6 @@ async function adminReport(req, res, next) {
     // Parallel queries
     const [
       totalUsers,
-      totalProducts,
       totalOrders,
       activeProducts,
       ordersThisMonth,
@@ -18,7 +17,6 @@ async function adminReport(req, res, next) {
       recentOrders,
     ] = await Promise.all([
       prisma.user.count({ where: { status: 'ACTIVE' } }),
-      prisma.product.count({ where: { status: 'ACTIVE' } }),
       prisma.order.count(),
       prisma.product.count({ where: { status: 'ACTIVE' } }),
       prisma.order.count({

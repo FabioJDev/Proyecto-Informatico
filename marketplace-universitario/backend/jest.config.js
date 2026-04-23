@@ -17,8 +17,8 @@ const config = {
     global: {
       branches: 60,
       functions: 69,
-      lines: 70,
-      statements: 70,
+      lines: 75,
+      statements: 75,
     },
   },
   coverageReporters: ['text', 'lcov', 'clover'],
