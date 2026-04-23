@@ -21,8 +21,13 @@ export const useAuthStore = create((set, get) => ({
       const res = await api.get('/auth/me');
       set({ user: res.data.user, isAuthenticated: true, isLoading: false });
     } catch {
-      localStorage.removeItem(TOKEN_KEY);
-      set({ user: null, isAuthenticated: false, isLoading: false, token: null });
+      // Only clear auth if the token hasn't been replaced by a concurrent login()
+      if (get().token === token) {
+        localStorage.removeItem(TOKEN_KEY);
+        set({ user: null, isAuthenticated: false, isLoading: false, token: null });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 
@@ -30,7 +35,8 @@ export const useAuthStore = create((set, get) => ({
     const res = await api.post('/auth/login', { email, password });
     const { token, user } = res.data;
     localStorage.setItem(TOKEN_KEY, token);
-    set({ user, isAuthenticated: true, token });
+    // isLoading: false cancels any in-flight checkAuth that may still be running
+    set({ user, isAuthenticated: true, token, isLoading: false });
     return user;
   },
 
@@ -38,7 +44,7 @@ export const useAuthStore = create((set, get) => ({
     const res = await api.post('/auth/register', { email, password, confirmPassword, role });
     const { token, user } = res.data;
     localStorage.setItem(TOKEN_KEY, token);
-    set({ user, isAuthenticated: true, token });
+    set({ user, isAuthenticated: true, token, isLoading: false });
     return user;
   },
 
