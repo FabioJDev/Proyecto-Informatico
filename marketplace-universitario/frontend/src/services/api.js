@@ -35,25 +35,12 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || 'Error de conexión. Intenta de nuevo.';
 
     if (status === 401) {
-      const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
-      const onPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
-
-      if (!onPublicPage) {
-        // Token expired or invalid — clear stored token and redirect to login
-        localStorage.removeItem('mu_token');
-        import('../store/authStore.js').then(({ useAuthStore }) => {
-          useAuthStore.getState().logout();
-        });
-        window.location.href = '/login';
-      }
-    }
-
-    if (status === 403) {
-      const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
-      const onPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
-      if (!onPublicPage) {
-        window.location.href = '/?error=access-denied';
-      }
+      // Clear session state and let ProtectedRoute handle the redirect via React Router.
+      // Never use window.location.href here — it causes a full page reload that kills
+      // in-flight login() calls and creates the login → redirect loop in production.
+      import('../store/authStore.js').then(({ useAuthStore }) => {
+        useAuthStore.getState().clearSession();
+      });
     }
 
     // Attach user-friendly message to the error

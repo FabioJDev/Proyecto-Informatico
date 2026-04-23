@@ -62,7 +62,11 @@ async function login(req, res, next) {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
+    // findFirst + mode:'insensitive' prevents login failures caused by email case mismatches
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+      include: { profile: true },
+    });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
     }

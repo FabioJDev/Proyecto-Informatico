@@ -26,20 +26,24 @@ const app = express();
 app.use(helmet());
 
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL]
+  ? [process.env.FRONTEND_URL].filter(Boolean)
   : [
-      process.env.FRONTEND_URL || 'http://localhost:5173',
+      process.env.FRONTEND_URL,
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
-    ];
+    ].filter(Boolean);
+
+if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+  console.error('⚠️  FRONTEND_URL is not set — CORS will block all browser requests in production!');
+}
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. curl, Postman, server-to-server)
+      // Allow requests with no origin (curl, Postman, server-to-server)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
