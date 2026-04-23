@@ -3,7 +3,8 @@ const { body } = require('express-validator');
 const createOrderValidation = [
   body('productId')
     .notEmpty().withMessage('El ID del producto es requerido.')
-    .trim(),
+    .trim()
+    .isUUID().withMessage('ID de producto inválido.'),
   body('quantity')
     .isInt({ min: 1, max: 100 }).withMessage('La cantidad debe ser entre 1 y 100.')
     .toInt(),

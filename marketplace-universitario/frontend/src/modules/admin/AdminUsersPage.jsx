@@ -54,9 +54,18 @@ export default function AdminUsersPage() {
     if (!modal) return;
     setIsUpdating(true);
     try {
-      const newStatus = modal.action === 'suspend' ? 'SUSPENDED' : 'ACTIVE';
+      let newStatus = 'ACTIVE';
+      if (modal.action === 'suspend') newStatus = 'SUSPENDED';
+      else if (modal.action === 'delete') newStatus = 'DELETED';
+      
       await api.patch(`/users/${modal.user.id}/status`, { status: newStatus });
-      addToast(`Usuario ${newStatus === 'SUSPENDED' ? 'suspendido' : 'reactivado'} correctamente.`, 'success');
+      
+      const statusMessages = {
+        suspend: 'Usuario suspendido correctamente.',
+        reactivate: 'Usuario reactivado correctamente.',
+        delete: 'Usuario eliminado correctamente.'
+      };
+      addToast(statusMessages[modal.action], 'success');
       setModal(null);
       fetchUsers(pagination.page);
     } catch (err) {
@@ -154,25 +163,37 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         {user.role !== 'ADMIN' && (
-                          user.status === 'ACTIVE' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-[#B45309] hover:bg-[#FEF3C7]"
-                              onClick={() => setModal({ user, action: 'suspend' })}
-                            >
-                              Suspender
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-[#065F46] hover:bg-[#D1FAE5]"
-                              onClick={() => setModal({ user, action: 'reactivate' })}
-                            >
-                              Reactivar
-                            </Button>
-                          )
+                          <div className="flex items-center justify-end gap-2">
+                            {user.status === 'ACTIVE' ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[#B45309] hover:bg-[#FEF3C7]"
+                                  onClick={() => setModal({ user, action: 'suspend' })}
+                                >
+                                  Suspender
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[#990100] hover:bg-[rgba(153,1,0,0.06)]"
+                                  onClick={() => setModal({ user, action: 'delete' })}
+                                >
+                                  Eliminar
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[#065F46] hover:bg-[#D1FAE5]"
+                                onClick={() => setModal({ user, action: 'reactivate' })}
+                              >
+                                Reactivar
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -189,15 +210,25 @@ export default function AdminUsersPage() {
       <Modal
         isOpen={!!modal}
         onClose={() => setModal(null)}
-        title={modal?.action === 'suspend' ? 'Suspender usuario' : 'Reactivar usuario'}
-        confirmLabel={modal?.action === 'suspend' ? 'Suspender' : 'Reactivar'}
-        confirmVariant={modal?.action === 'suspend' ? 'danger' : 'primary'}
+        title={
+          modal?.action === 'suspend' ? 'Suspender usuario'
+            : modal?.action === 'delete' ? 'Eliminar usuario'
+            : 'Reactivar usuario'
+        }
+        confirmLabel={
+          modal?.action === 'suspend' ? 'Suspender'
+            : modal?.action === 'delete' ? 'Eliminar'
+            : 'Reactivar'
+        }
+        confirmVariant={modal?.action === 'suspend' || modal?.action === 'delete' ? 'danger' : 'primary'}
         onConfirm={handleStatusChange}
         isLoading={isUpdating}
       >
         <p>
           {modal?.action === 'suspend'
             ? `¿Deseas suspender la cuenta de ${modal?.user?.email}? El usuario no podrá iniciar sesión.`
+            : modal?.action === 'delete'
+            ? `¿Deseas eliminar permanentemente la cuenta de ${modal?.user?.email}? Esta acción no se puede deshacer. Todos sus datos y publicaciones serán marcados como eliminados.`
             : `¿Deseas reactivar la cuenta de ${modal?.user?.email}?`
           }
         </p>

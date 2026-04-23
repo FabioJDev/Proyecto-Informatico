@@ -52,6 +52,7 @@ export default function MyOrdersPage() {
       await api.post('/reviews', { orderId: reviewModal, ...review });
       addToast('Reseña publicada. ¡Gracias!', 'success');
       setReviewModal(null);
+      setReview({ rating: 5, comment: '' });
       refetch();
     } catch (err) {
       addToast(err.userMessage || 'Error al publicar reseña.', 'error');

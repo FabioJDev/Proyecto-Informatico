@@ -43,11 +43,12 @@ async function adminReport(req, res, next) {
     ]);
 
     // Monthly orders over the last 12 months using raw query
+    // CAST to INTEGER to avoid BigInt serialization issues in JSON.stringify
     const monthlyOrders = await prisma.$queryRaw`
       SELECT
         TO_CHAR(created_at, 'YYYY-MM') as month,
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered
+        CAST(COUNT(*) AS INTEGER) as total,
+        CAST(SUM(CASE WHEN status = 'DELIVERED' THEN 1 ELSE 0 END) AS INTEGER) as delivered
       FROM orders
       WHERE created_at >= ${twelveMonthsAgo}
       GROUP BY month

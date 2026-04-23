@@ -246,7 +246,7 @@ async function remove(req, res, next) {
     }
 
     if (role !== 'ADMIN' && product.sellerId !== userId) {
-      return res.status(403).json({ success: false, error: 'No tienes permiso para eliminar esta publicación.' });
+      return res.status(403).json({ success: false, message: 'No tienes permiso para eliminar esta publicación.' });
     }
 
     // CA-03: Block deletion if product has pending or accepted orders
@@ -256,7 +256,7 @@ async function remove(req, res, next) {
     if (activeOrders > 0) {
       return res.status(409).json({
         success: false,
-        error: 'No puedes eliminar una publicación con pedidos activos. Resuelve los pedidos primero',
+        message: 'No puedes eliminar una publicación con pedidos activos. Resuelve los pedidos primero',
         code: 'HAS_ACTIVE_ORDERS',
       });
     }
@@ -279,4 +279,45 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { getAll, getById, getCategories, create, update, remove };
+// PATCH /api/products/:id/status — [ADMIN] change product status (disable/enable only, not delete)
+async function updateStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const product = await prisma.product.findUnique({ where: { id } });
+
+    if (!product || product.status === 'DELETED') {
+      return res.status(404).json({ success: false, message: 'Publicación no encontrada.' });
+    }
+
+    // Only ACTIVE and INACTIVE are allowed for status updates (not DELETED)
+    if (!['ACTIVE', 'INACTIVE'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Estado inválido. Solo se puede cambiar a ACTIVO o INACTIVO.' });
+    }
+
+    // Same status — no change needed
+    if (product.status === status) {
+      return res.json({ success: true, message: `La publicación ya está ${status === 'ACTIVE' ? 'activa' : 'inactiva'}.`, data: product });
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { status },
+      include: {
+        seller: { select: { email: true, profile: { select: { businessName: true } } } },
+        category: { select: { name: true } },
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Publicación ${status === 'ACTIVE' ? 'activada' : 'desactivada'} exitosamente.`,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAll, getById, getCategories, create, update, remove, updateStatus };

@@ -60,7 +60,7 @@ async function create(req, res, next) {
       orderDate,
     };
 
-    Promise.all([
+    void Promise.all([
       sendOrderConfirmation(order.buyer.email, orderDetails).catch((e) =>
         console.error('[email] sendOrderConfirmation failed:', e.message)
       ),

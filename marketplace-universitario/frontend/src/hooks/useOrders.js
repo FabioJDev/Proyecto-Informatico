@@ -49,5 +49,9 @@ export function useOrders(params = {}) {
     return res.data;
   };
 
-  return { orders, pagination, isLoading, error, refetch: fetchOrders, acceptOrder, rejectOrder, deliverOrder, cancelOrder };
+  const setPage = (page) => {
+    fetchOrders({ page });
+  };
+
+  return { orders, pagination, isLoading, error, refetch: fetchOrders, setPage, acceptOrder, rejectOrder, deliverOrder, cancelOrder };
 }

@@ -2,47 +2,29 @@ const nodemailer = require('nodemailer');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
 // ─────────────────────────────────────────────
-// Transporter — SendGrid SMTP (primary)
+// Transporter — Gmail SMTP
 // ─────────────────────────────────────────────
-let transporter;
-
-async function getTransporter() {
-  if (transporter) return transporter;
-
-  if (process.env.SENDGRID_API_KEY) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      secure: false,
-      auth: { user: 'apikey', pass: process.env.SENDGRID_API_KEY },
-    });
-  } else {
-    // Nodemailer fallback (Gmail SMTP)
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: false,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-  }
-
-  return transporter;
-}
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: parseInt(process.env.EMAIL_PORT, 10),
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // ─────────────────────────────────────────────
 // Internal send helper with retry (RNF-11)
 // ─────────────────────────────────────────────
 async function sendEmail(to, subject, html, text) {
-  const t = await getTransporter();
-  const from = process.env.SENDGRID_API_KEY
-    ? `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.EMAIL_FROM}>`
-    : `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.SMTP_USER || process.env.EMAIL_FROM}>`;
+  const from = `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.EMAIL_FROM}>`;
 
   return retryWithBackoff(
     async () => {
       const mailData = { from, to, subject, html };
       if (text) mailData.text = text;
-      const info = await t.sendMail(mailData);
+      const info = await transporter.sendMail(mailData);
       console.log(`📧 Email enviado a: ${to} — MessageId: ${info.messageId}`);
       return info;
     },

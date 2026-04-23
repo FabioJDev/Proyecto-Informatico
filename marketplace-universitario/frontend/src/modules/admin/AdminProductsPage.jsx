@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api.js';
 import Navbar from '../../components/layout/Navbar.jsx';
+import Footer from '../../components/layout/Footer.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import Modal from '../../components/ui/Modal.jsx';
@@ -27,8 +28,9 @@ export default function AdminProductsPage() {
   const [keyword, setKeyword] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [statusModal, setStatusModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchProducts = useCallback((page = 1) => {
     setIsLoading(true);
@@ -56,7 +58,7 @@ export default function AdminProductsPage() {
 
   const handleDelete = async () => {
     if (!deleteModal) return;
-    setIsDeleting(true);
+    setIsUpdating(true);
     try {
       await api.delete(`/products/${deleteModal.id}`);
       addToast('Producto eliminado correctamente.', 'success');
@@ -65,7 +67,23 @@ export default function AdminProductsPage() {
     } catch (err) {
       addToast(err.userMessage || 'Error al eliminar el producto.', 'error');
     } finally {
-      setIsDeleting(false);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleStatusChange = async () => {
+    if (!statusModal) return;
+    setIsUpdating(true);
+    try {
+      const newStatus = statusModal.action === 'deactivate' ? 'INACTIVE' : 'ACTIVE';
+      await api.patch(`/products/${statusModal.product.id}/status`, { status: newStatus });
+      addToast(`Producto ${newStatus === 'INACTIVE' ? 'desactivado' : 'activado'} correctamente.`, 'success');
+      setStatusModal(null);
+      setProducts((prev) => prev.map((p) => (p.id === statusModal.product.id ? { ...p, status: newStatus } : p)));
+    } catch (err) {
+      addToast(err.userMessage || 'Error al actualizar estado.', 'error');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -184,14 +202,47 @@ export default function AdminProductsPage() {
                       {formatDate(product.createdAt)}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[#990100] hover:bg-[rgba(153,1,0,0.06)]"
-                        onClick={() => setDeleteModal(product)}
-                      >
-                        Eliminar
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {product.status === 'ACTIVE' ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#B45309] hover:bg-[#FEF3C7]"
+                              onClick={() => setStatusModal({ product, action: 'deactivate' })}
+                            >
+                              Desactivar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#990100] hover:bg-[rgba(153,1,0,0.06)]"
+                              onClick={() => setDeleteModal(product)}
+                            >
+                              Eliminar
+                            </Button>
+                          </>
+                        ) : product.status === 'INACTIVE' ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#065F46] hover:bg-[#D1FAE5]"
+                              onClick={() => setStatusModal({ product, action: 'reactivate' })}
+                            >
+                              Reactivar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#990100] hover:bg-[rgba(153,1,0,0.06)]"
+                              onClick={() => setDeleteModal(product)}
+                            >
+                              Eliminar
+                            </Button>
+                          </>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -205,6 +256,25 @@ export default function AdminProductsPage() {
         </div>
       </main>
 
+      <Footer />
+
+      <Modal
+        isOpen={!!statusModal}
+        onClose={() => setStatusModal(null)}
+        title={statusModal?.action === 'deactivate' ? 'Desactivar producto' : 'Reactivar producto'}
+        confirmLabel={statusModal?.action === 'deactivate' ? 'Desactivar' : 'Reactivar'}
+        confirmVariant={statusModal?.action === 'deactivate' ? 'danger' : 'primary'}
+        onConfirm={handleStatusChange}
+        isLoading={isUpdating}
+      >
+        <p>
+          {statusModal?.action === 'deactivate'
+            ? `¿Deseas desactivar ${statusModal?.product?.name}? El producto no aparecerá en el catálogo, pero podrá reactivarse después.`
+            : `¿Deseas reactivar ${statusModal?.product?.name}? El producto volverá a aparecer en el catálogo.`
+          }
+        </p>
+      </Modal>
+
       <Modal
         isOpen={!!deleteModal}
         onClose={() => setDeleteModal(null)}
@@ -212,7 +282,7 @@ export default function AdminProductsPage() {
         confirmLabel="Eliminar"
         confirmVariant="danger"
         onConfirm={handleDelete}
-        isLoading={isDeleting}
+        isLoading={isUpdating}
       >
         <p>
           ¿Seguro que deseas eliminar <strong className="text-[#1A1A1A]">{deleteModal?.name}</strong>?

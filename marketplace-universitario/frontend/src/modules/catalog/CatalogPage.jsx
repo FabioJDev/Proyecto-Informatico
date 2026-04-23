@@ -105,50 +105,50 @@ function PricePopover({ minPrice, maxPrice, onApply, onClose, anchorRef }) {
   return (
     <div
       ref={popRef}
-      className="absolute top-full right-0 mt-2 w-72 z-50 bg-white border border-[#E8E8E8] shadow-xl p-5 animate-in"
+      className="absolute top-full right-0 mt-2 w-96 z-50 bg-white border border-[#E8E8E8] shadow-xl p-6 animate-in"
       style={{ borderRadius: '4px 16px 4px 16px' }}
     >
-      <p className="font-semibold text-sm text-[#333333] mb-4">Rango de precio</p>
-      <div className="flex gap-3 mb-1">
-        <div className="flex-1">
-          <label className="text-xs text-[#666666] block mb-1">Mínimo</label>
+      <p className="font-semibold text-sm text-[#333333] mb-5">Rango de precio</p>
+      <div className="space-y-4 mb-3">
+        <div>
+          <label className="text-xs text-[#666666] block mb-2 font-medium">Precio mínimo</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#999999] font-mono select-none">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#999999] font-mono select-none">$</span>
             <input
-              type="number" min="0" step="1000" value={min}
+              type="number" min="50" step="50" value={min}
               onChange={(e) => setMin(e.target.value)}
-              placeholder="0"
-              className={inputCls}
+              placeholder="50"
+              className="w-full pl-8 pr-4 py-3 text-sm border border-[#E8E8E8] rounded-lg focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)] focus:outline-none transition-all"
             />
           </div>
         </div>
-        <div className="flex-1">
-          <label className="text-xs text-[#666666] block mb-1">Máximo</label>
+        <div>
+          <label className="text-xs text-[#666666] block mb-2 font-medium">Precio máximo</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#999999] font-mono select-none">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#999999] font-mono select-none">$</span>
             <input
-              type="number" min="0" step="1000" value={max}
+              type="number" min="50" step="50" value={max}
               onChange={(e) => setMax(e.target.value)}
               placeholder="∞"
-              className={inputCls}
+              className="w-full pl-8 pr-4 py-3 text-sm border border-[#E8E8E8] rounded-lg focus:border-[#990100] focus:ring-[3px] focus:ring-[rgba(153,1,0,0.10)] focus:outline-none transition-all"
             />
           </div>
         </div>
       </div>
       {isInvalid && (
-        <p className="text-xs text-[#990100] mb-2 mt-1">El mínimo no puede superar el máximo</p>
+        <p className="text-xs text-[#990100] mb-3 mt-2">El mínimo no puede superar el máximo</p>
       )}
-      <div className="flex gap-2 mt-4">
+      <div className="flex gap-3 mt-5">
         <button
           onClick={() => { setMin(''); setMax(''); onApply({ minPrice: '', maxPrice: '' }); }}
-          className="flex-1 py-2 text-xs font-semibold border border-[#E8E8E8] rounded-lg text-[#666666] hover:border-[#990100] hover:text-[#990100] transition-colors"
+          className="flex-1 py-3 text-xs font-semibold border border-[#E8E8E8] rounded-lg text-[#666666] hover:border-[#990100] hover:text-[#990100] transition-colors"
         >
           Limpiar
         </button>
         <button
           onClick={() => { if (!isInvalid) { onApply({ minPrice: min, maxPrice: max }); onClose(); } }}
           disabled={isInvalid}
-          className="flex-1 py-2 text-xs font-semibold rounded-lg text-white bg-[#990100] hover:bg-[#B90504] disabled:opacity-50 transition-colors"
+          className="flex-1 py-3 text-xs font-semibold rounded-lg text-white bg-[#990100] hover:bg-[#B90504] disabled:opacity-50 transition-colors"
         >
           Aplicar
         </button>
@@ -349,39 +349,42 @@ export default function CatalogPage() {
       <div className="sticky top-16 z-40 bg-white border-b border-[#E8E8E8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Row 1: category chips + price + sort */}
-          <div className="flex items-center gap-3 py-3 overflow-x-auto">
-            {/* "Todos" chip */}
-            <button
-              onClick={() => updateFilters({ category: '' })}
-              className={`shrink-0 px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-full border transition-all whitespace-nowrap ${
-                category === ''
-                  ? 'bg-[#990100] text-white border-[#990100]'
-                  : 'border-[#E8E8E8] text-[#666666] hover:border-[#990100] hover:text-[#990100]'
-              }`}
-            >
-              Todos
-            </button>
-
-            {/* Category chips */}
-            {categories.map((cat) => (
+          {/* Row 1: category chips (scrollable) + price + sort (sticky) */}
+          <div className="flex items-center gap-3 py-3">
+            {/* Scrollable categories container */}
+            <div className="flex items-center gap-3 overflow-x-auto flex-1 min-w-0">
+              {/* "Todos" chip */}
               <button
-                key={cat.id}
-                onClick={() => updateFilters({ category: cat.id === category ? '' : cat.id })}
+                onClick={() => updateFilters({ category: '' })}
                 className={`shrink-0 px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-full border transition-all whitespace-nowrap ${
-                  cat.id === category
+                  category === ''
                     ? 'bg-[#990100] text-white border-[#990100]'
                     : 'border-[#E8E8E8] text-[#666666] hover:border-[#990100] hover:text-[#990100]'
                 }`}
               >
-                {cat.name}
+                Todos
               </button>
-            ))}
 
-            {/* Divider */}
-            <div className="hidden sm:block shrink-0 w-px h-5 bg-[#E8E8E8] mx-1" />
+              {/* Category chips */}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => updateFilters({ category: cat.id === category ? '' : cat.id })}
+                  className={`shrink-0 px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-full border transition-all whitespace-nowrap ${
+                    cat.id === category
+                      ? 'bg-[#990100] text-white border-[#990100]'
+                      : 'border-[#E8E8E8] text-[#666666] hover:border-[#990100] hover:text-[#990100]'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
 
-            {/* Price range button (CA-03) */}
+              {/* Divider */}
+              <div className="hidden sm:block shrink-0 w-px h-5 bg-[#E8E8E8] mx-1" />
+            </div>
+
+            {/* Price range button (CA-03) - outside of overflow */}
             <div className="relative shrink-0" ref={priceRef}>
               <button
                 onClick={() => setPriceOpen((v) => !v)}
@@ -407,11 +410,11 @@ export default function CatalogPage() {
               )}
             </div>
 
-            {/* Sort dropdown */}
+            {/* Sort dropdown - outside of overflow */}
             <select
               value={orderBy}
               onChange={(e) => updateFilters({ orderBy: e.target.value })}
-              className="ml-auto shrink-0 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#E8E8E8] rounded-lg px-3 py-1.5 text-[#333333] bg-white hover:border-[#990100] focus:border-[#990100] focus:outline-none cursor-pointer transition-colors"
+              className="shrink-0 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#E8E8E8] rounded-lg px-3 py-1.5 text-[#333333] bg-white hover:border-[#990100] focus:border-[#990100] focus:outline-none cursor-pointer transition-colors"
             >
               <option value="recent">Más recientes</option>
               <option value="price_asc">Menor precio</option>
