@@ -246,7 +246,7 @@ async function remove(req, res, next) {
     }
 
     if (role !== 'ADMIN' && product.sellerId !== userId) {
-      return res.status(403).json({ success: false, error: 'No tienes permiso para eliminar esta publicación.' });
+      return res.status(403).json({ success: false, message: 'No tienes permiso para eliminar esta publicación.' });
     }
 
     // CA-03: Block deletion if product has pending or accepted orders
@@ -256,7 +256,7 @@ async function remove(req, res, next) {
     if (activeOrders > 0) {
       return res.status(409).json({
         success: false,
-        error: 'No puedes eliminar una publicación con pedidos activos. Resuelve los pedidos primero',
+        message: 'No puedes eliminar una publicación con pedidos activos. Resuelve los pedidos primero',
         code: 'HAS_ACTIVE_ORDERS',
       });
     }

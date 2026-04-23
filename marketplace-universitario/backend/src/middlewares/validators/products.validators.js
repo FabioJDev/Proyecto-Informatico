@@ -15,7 +15,8 @@ const createProductValidation = [
     .toFloat(),
   body('categoryId')
     .notEmpty().withMessage('Debes seleccionar una categoría')
-    .trim(),
+    .trim()
+    .isUUID().withMessage('ID de categoría inválido.'),
   body('images')
     .optional()
     .isArray({ max: 5 }).withMessage('Solo se permiten hasta 5 imágenes por publicación'),
@@ -38,7 +39,8 @@ const updateProductValidation = [
     .toFloat(),
   body('categoryId')
     .optional()
-    .trim(),
+    .trim()
+    .isUUID().withMessage('ID de categoría inválido.'),
   body('status')
     .optional()
     .isIn(['ACTIVE', 'INACTIVE']).withMessage('Estado inválido.'),
@@ -54,7 +56,7 @@ const catalogQueryValidation = [
   query('maxPrice').optional().isFloat({ min: 0 }).withMessage('Precio máximo inválido.').toFloat(),
   query('keyword').optional().trim().isLength({ max: 100 }),
   query('search').optional().trim().isLength({ max: 100 }).withMessage('La búsqueda no puede superar 100 caracteres.'),
-  query('categoryId').optional().trim(),
+  query('categoryId').optional().trim().isUUID().withMessage('ID de categoría inválido.'),
   query('category').optional().trim(),
   query('orderBy').optional().trim().isIn(['recent', 'price_asc', 'price_desc']).withMessage('Orden inválido.'),
 ];
