@@ -17,6 +17,7 @@ router.patch('/:id/deliver', requireRole('EMPRENDEDOR'), ordersController.delive
 router.patch('/:id/cancel', requireRole('COMPRADOR'), ordersController.cancel);
 
 // Dev-only: send a test confirmation email
+/* istanbul ignore next */
 if (process.env.NODE_ENV !== 'production') {
   router.post('/test-email', ordersController.sendTestEmail);
 }

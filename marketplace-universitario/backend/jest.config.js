@@ -15,10 +15,10 @@ const config = {
   ],
   coverageThreshold: {
     global: {
-      branches: 60,
-      functions: 69,
-      lines: 75,
-      statements: 75,
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
     },
   },
   coverageReporters: ['text', 'lcov', 'clover'],

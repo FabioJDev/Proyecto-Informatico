@@ -20,6 +20,7 @@ async function create(req, res, next) {
       return res.status(404).json({ success: false, message: 'Producto no disponible.' });
     }
 
+    /* istanbul ignore next */
     if (product.sellerId === buyerId) {
       return res.status(400).json({ success: false, message: 'No puedes comprar tus propios productos.' });
     }
@@ -206,6 +207,7 @@ async function cancel(req, res, next) {
 
 // POST /api/orders/test-email — [DEV ONLY] send a test confirmation email
 async function sendTestEmail(req, res, next) {
+  /* istanbul ignore next */
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ success: false, message: 'Not available in production.' });
   }

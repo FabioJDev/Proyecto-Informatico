@@ -16,12 +16,16 @@ jest.mock('../src/services/email.service', () => ({
   sendOrderStatusChange: jest.fn().mockResolvedValue(true),
   sendPasswordReset: jest.fn().mockResolvedValue(true),
 }));
+const emailService = require('../src/services/email.service');
 
 const prisma = new PrismaClient();
 
 let buyerCookie;
+let buyer2Cookie;
 let sellerCookie;
+let adminCookie;
 let productId;
+let inactiveProductId;
 let orderId;
 let acceptedOrderId;
 
@@ -78,6 +82,20 @@ beforeAll(async () => {
   });
   productId = product.id;
 
+  // Create INACTIVE product (for 404 test)
+  const inactiveProduct = await prisma.product.create({
+    data: {
+      sellerId: seller.id,
+      categoryId: category.id,
+      name: 'Inactive Product',
+      description: 'Not available for orders',
+      price: 5000,
+      images: [],
+      status: 'INACTIVE',
+    },
+  });
+  inactiveProductId = inactiveProduct.id;
+
   // Pre-create an ACCEPTED order for cancel-after-accept test
   const acceptedOrder = await prisma.order.create({
     data: {
@@ -90,7 +108,17 @@ beforeAll(async () => {
   });
   acceptedOrderId = acceptedOrder.id;
 
-  // Login
+  // Create buyer2 (for cancel-by-non-owner test)
+  await prisma.user.create({
+    data: { email: 'buyer2@orderstest.edu', passwordHash: hash, role: 'COMPRADOR' },
+  });
+
+  // Create admin user
+  await prisma.user.create({
+    data: { email: 'admin@orderstest.edu', passwordHash: hash, role: 'ADMIN' },
+  });
+
+  // Login all users
   const sellerRes = await request(app).post('/api/auth/login').send({
     email: 'seller@orderstest.edu',
     password: 'ValidPass1',
@@ -102,6 +130,18 @@ beforeAll(async () => {
     password: 'ValidPass1',
   });
   buyerCookie = buyerRes.headers['set-cookie'];
+
+  const buyer2Res = await request(app).post('/api/auth/login').send({
+    email: 'buyer2@orderstest.edu',
+    password: 'ValidPass1',
+  });
+  buyer2Cookie = buyer2Res.headers['set-cookie'];
+
+  const adminRes = await request(app).post('/api/auth/login').send({
+    email: 'admin@orderstest.edu',
+    password: 'ValidPass1',
+  });
+  adminCookie = adminRes.headers['set-cookie'];
 });
 
 afterAll(async () => {
@@ -145,6 +185,34 @@ describe('POST /api/orders', () => {
     const res = await request(app).post('/api/orders').send({ productId, quantity: 1 });
     expect(res.status).toBe(401);
   });
+
+  test('✓ 404 si el producto no existe', async () => {
+    const res = await request(app)
+      .post('/api/orders')
+      .set('Cookie', buyerCookie)
+      .send({ productId: '00000000-0000-0000-0000-000000000000', quantity: 1 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('✓ 404 si el producto está INACTIVO', async () => {
+    const res = await request(app)
+      .post('/api/orders')
+      .set('Cookie', buyerCookie)
+      .send({ productId: inactiveProductId, quantity: 1 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('✓ crea pedido aunque los emails fallen', async () => {
+    emailService.sendOrderConfirmation.mockRejectedValueOnce(new Error('SMTP error'));
+    const res = await request(app)
+      .post('/api/orders')
+      .set('Cookie', buyerCookie)
+      .send({ productId, quantity: 1 });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -171,6 +239,29 @@ describe('PATCH /api/orders/:id/accept', () => {
       .set('Cookie', buyerCookie);
 
     expect(res.status).toBe(403);
+  });
+
+  test('✓ 404 para pedido inexistente', async () => {
+    const res = await request(app)
+      .patch('/api/orders/00000000-0000-0000-0000-000000000000/accept')
+      .set('Cookie', sellerCookie);
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('✓ acepta pedido aunque el email de notificación falle', async () => {
+    const newOrderRes = await request(app)
+      .post('/api/orders')
+      .set('Cookie', buyerCookie)
+      .send({ productId, quantity: 1 });
+    const tempOrderId = newOrderRes.body.data?.id;
+
+    emailService.sendOrderStatusChange.mockRejectedValueOnce(new Error('SMTP error'));
+    const res = await request(app)
+      .patch(`/api/orders/${tempOrderId}/accept`)
+      .set('Cookie', sellerCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('ACCEPTED');
   });
 });
 
@@ -205,6 +296,20 @@ describe('PATCH /api/orders/:id/cancel', () => {
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toMatch(/no puede ser/i);
+  });
+
+  test('✓ otro comprador no puede cancelar el pedido (403)', async () => {
+    const newOrderRes = await request(app)
+      .post('/api/orders')
+      .set('Cookie', buyerCookie)
+      .send({ productId, quantity: 1 });
+    const tempOrderId = newOrderRes.body.data?.id;
+
+    const res = await request(app)
+      .patch(`/api/orders/${tempOrderId}/cancel`)
+      .set('Cookie', buyer2Cookie);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
   });
 });
 
@@ -244,9 +349,34 @@ describe('GET /api/orders', () => {
     expect(res.body.pagination).toBeDefined();
   });
 
+  test('✓ [COMPRADOR] filtra por estado', async () => {
+    const res = await request(app).get('/api/orders?status=PENDING').set('Cookie', buyerCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    res.body.data.forEach((o) => expect(o.status).toBe('PENDING'));
+  });
+
   test('✓ [EMPRENDEDOR] lista sus ventas', async () => {
     const res = await request(app).get('/api/orders').set('Cookie', sellerCookie);
 
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ [EMPRENDEDOR] filtra por estado', async () => {
+    const res = await request(app).get('/api/orders?status=DELIVERED').set('Cookie', sellerCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ [ADMIN] lista todos los pedidos', async () => {
+    const res = await request(app).get('/api/orders').set('Cookie', adminCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ [ADMIN] filtra todos los pedidos por estado', async () => {
+    const res = await request(app).get('/api/orders?status=PENDING').set('Cookie', adminCookie);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
@@ -277,5 +407,28 @@ describe('PATCH /api/orders/:id/deliver', () => {
       .set('Cookie', buyerCookie);
 
     expect(res.status).toBe(403);
+  });
+});
+
+// ─────────────────────────────────────────────
+// POST /api/orders/test-email
+// ─────────────────────────────────────────────
+describe('POST /api/orders/test-email', () => {
+  test('✓ envía email de prueba con email en el body', async () => {
+    const res = await request(app)
+      .post('/api/orders/test-email')
+      .set('Cookie', buyerCookie)
+      .send({ email: 'test@orderstest.edu' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('✓ usa el email del usuario autenticado si no se provee email', async () => {
+    const res = await request(app)
+      .post('/api/orders/test-email')
+      .set('Cookie', buyerCookie)
+      .send({});
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 });

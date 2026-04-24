@@ -16,6 +16,7 @@ jest.mock('../src/services/email.service', () => ({
 const request = require('supertest');
 const { PrismaClient } = require('@prisma/client');
 const app = require('../src/app');
+const emailService = require('../src/services/email.service');
 
 const prisma = new PrismaClient();
 
@@ -33,11 +34,17 @@ beforeAll(async () => {
   await prisma.$connect();
   await cleanupUser(INSTITUTIONAL_EMAIL);
   await cleanupUser('existing@universidad.edu.co');
+  await cleanupUser('emailfail@universidad.edu.co');
+  await cleanupUser('deleted-user@universidad.edu.co');
+  await cleanupUser('me-gone@universidad.edu.co');
 });
 
 afterAll(async () => {
   await cleanupUser(INSTITUTIONAL_EMAIL);
   await cleanupUser('existing@universidad.edu.co');
+  await cleanupUser('emailfail@universidad.edu.co');
+  await cleanupUser('deleted-user@universidad.edu.co');
+  await cleanupUser('me-gone@universidad.edu.co');
   await prisma.$disconnect();
 });
 
@@ -127,6 +134,18 @@ describe('POST /api/auth/register', () => {
     expect(res.status).toBe(422);
     expect(res.body.success).toBe(false);
   });
+
+  test('✓ registro completa aunque el email de bienvenida falle', async () => {
+    emailService.sendWelcomeEmail.mockRejectedValueOnce(new Error('SMTP error'));
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'emailfail@universidad.edu.co',
+      password: PASSWORD,
+      confirmPassword: PASSWORD,
+      role: 'COMPRADOR',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -204,6 +223,27 @@ describe('POST /api/auth/login', () => {
       data: { status: 'ACTIVE' },
     });
   });
+
+  test('✓ error si la cuenta está marcada como DELETED', async () => {
+    await request(app).post('/api/auth/register').send({
+      email: 'deleted-user@universidad.edu.co',
+      password: PASSWORD,
+      confirmPassword: PASSWORD,
+      role: 'COMPRADOR',
+    });
+    await prisma.user.updateMany({
+      where: { email: 'deleted-user@universidad.edu.co' },
+      data: { status: 'DELETED' },
+    });
+
+    const res = await request(app).post('/api/auth/login').send({
+      email: 'deleted-user@universidad.edu.co',
+      password: PASSWORD,
+    });
+
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -249,6 +289,26 @@ describe('GET /api/auth/me', () => {
     const res = await request(app).get('/api/auth/me');
     expect(res.status).toBe(401);
   });
+
+  test('✓ retorna 401 si el usuario fue eliminado después de loguearse', async () => {
+    await request(app).post('/api/auth/register').send({
+      email: 'me-gone@universidad.edu.co',
+      password: PASSWORD,
+      confirmPassword: PASSWORD,
+      role: 'COMPRADOR',
+    });
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'me-gone@universidad.edu.co',
+      password: PASSWORD,
+    });
+    const tempCookie = loginRes.headers['set-cookie'];
+
+    await prisma.user.deleteMany({ where: { email: 'me-gone@universidad.edu.co' } });
+
+    const res = await request(app).get('/api/auth/me').set('Cookie', tempCookie);
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -284,6 +344,15 @@ describe('POST /api/auth/forgot-password', () => {
 
     expect(res.status).toBe(422);
     expect(res.body.success).toBe(false);
+  });
+
+  test('✓ continúa aunque el envío de email de recuperación falle', async () => {
+    emailService.sendPasswordReset.mockRejectedValueOnce(new Error('SMTP error'));
+    const res = await request(app).post('/api/auth/forgot-password').send({
+      email: INSTITUTIONAL_EMAIL,
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 });
 
