@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../lib/prisma');
 
 /**
  * verifyJWT — Extracts and validates JWT from httpOnly cookie.
  * Sets req.user = { id, email, role }
+ * Also checks if user is suspended or deleted to close session
  */
-function verifyJWT(req, res, next) {
+async function verifyJWT(req, res, next) {
   // Accept Bearer token from Authorization header (cross-domain) or httpOnly cookie (same-domain)
   let token = null;
   const authHeader = req.headers.authorization;
@@ -23,7 +25,31 @@ function verifyJWT(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id, email: decoded.email, role: decoded.role };
+    
+    // Verify user still exists and is not suspended/deleted
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, role: true, status: true }
+    });
+
+    if (!user) {
+      res.clearCookie('jwt');
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Usuario no encontrado. Sesión cerrada.' 
+      });
+    }
+
+    // Check if user is suspended or deleted
+    if (user.status === 'SUSPENDED' || user.status === 'DELETED') {
+      res.clearCookie('jwt');
+      return res.status(401).json({ 
+        success: false, 
+        message: `Tu cuenta ha sido ${user.status === 'SUSPENDED' ? 'suspendida' : 'eliminada'}. Sesión cerrada.` 
+      });
+    }
+
+    req.user = { id: user.id, email: user.email, role: user.role };
     next();
   } catch (error) {
     const message =

@@ -494,10 +494,122 @@ async function sendWelcomeEmail(email, role) {
   return sendEmail(email, '¡Bienvenido a Marketplace UAO!', html, text);
 }
 
+// ─────────────────────────────────────────────
+// RF-XX: Email de notificación de suspensión de cuenta
+// ─────────────────────────────────────────────
+async function sendAccountSuspendedEmail(email) {
+  const platformUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Cuenta suspendida</title></head>
+<body style="margin:0;padding:0;background:#F6F6F6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F6F6F6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+  style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;border:1px solid #E8E8E8;overflow:hidden;">
+  <tr><td style="background:#990100;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="background:#990100;padding:28px 40px;text-align:center;">
+    <p style="margin:0;color:#FFFFFF;font-size:20px;font-weight:800;">MARKETPLACE UAO</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,0.70);font-size:11px;letter-spacing:2px;">CAMPUS · UAO</p>
+  </td></tr>
+  <tr>
+    <td style="padding:32px 40px;text-align:center;">
+      <p style="margin:0 0 12px;font-size:28px;">⚠️</p>
+      <p style="margin:0 0 12px;color:#990100;font-size:22px;font-weight:700;">Tu cuenta ha sido suspendida</p>
+      <p style="margin:0 0 24px;color:#666666;font-size:15px;line-height:1.7;">
+        Tu cuenta en Marketplace UAO ha sido suspendida por el administrador. 
+        Por razones de seguridad, tu sesión actual ha sido cerrada.
+      </p>
+      <p style="margin:0 0 24px;color:#666666;font-size:14px;line-height:1.6;">
+        Si crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tr><td>
+          <a href="${platformUrl}" style="display:inline-block;background:#990100;color:#FFFFFF;
+            text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:700;">
+            Volver al marketplace
+          </a>
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="background:#333333;padding:16px 40px;text-align:center;">
+    <p style="margin:0;color:#999999;font-size:12px;">Marketplace UAO · Universidad Autónoma de Occidente · Cali, Colombia</p>
+  </td></tr>
+  <tr><td style="background:#990100;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Tu cuenta ha sido suspendida\n\nTu cuenta en Marketplace UAO ha sido suspendida por el administrador.\nPor razones de seguridad, tu sesión actual ha sido cerrada.\n\nSi crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.\n\n${platformUrl}`;
+
+  return sendEmail(email, 'Tu cuenta ha sido suspendida', html, text);
+}
+
+// ─────────────────────────────────────────────
+// RF-XX: Email de notificación de eliminación de cuenta
+// ─────────────────────────────────────────────
+async function sendAccountDeletedEmail(email) {
+  const platformUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Cuenta eliminada</title></head>
+<body style="margin:0;padding:0;background:#F6F6F6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F6F6F6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+  style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;border:1px solid #E8E8E8;overflow:hidden;">
+  <tr><td style="background:#990100;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="background:#990100;padding:28px 40px;text-align:center;">
+    <p style="margin:0;color:#FFFFFF;font-size:20px;font-weight:800;">MARKETPLACE UAO</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,0.70);font-size:11px;letter-spacing:2px;">CAMPUS · UAO</p>
+  </td></tr>
+  <tr>
+    <td style="padding:32px 40px;text-align:center;">
+      <p style="margin:0 0 12px;font-size:28px;">🗑️</p>
+      <p style="margin:0 0 12px;color:#990100;font-size:22px;font-weight:700;">Tu cuenta ha sido eliminada</p>
+      <p style="margin:0 0 24px;color:#666666;font-size:15px;line-height:1.7;">
+        Tu cuenta en Marketplace UAO ha sido eliminada por el administrador. 
+        Por razones de seguridad, tu sesión actual ha sido cerrada y no podrás acceder al marketplace.
+      </p>
+      <p style="margin:0 0 24px;color:#666666;font-size:14px;line-height:1.6;">
+        Si crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tr><td>
+          <a href="${platformUrl}" style="display:inline-block;background:#990100;color:#FFFFFF;
+            text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:700;">
+            Volver al marketplace
+          </a>
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="background:#333333;padding:16px 40px;text-align:center;">
+    <p style="margin:0;color:#999999;font-size:12px;">Marketplace UAO · Universidad Autónoma de Occidente · Cali, Colombia</p>
+  </td></tr>
+  <tr><td style="background:#990100;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Tu cuenta ha sido eliminada\n\nTu cuenta en Marketplace UAO ha sido eliminada por el administrador.\nPor razones de seguridad, tu sesión actual ha sido cerrada y no podrás acceder al marketplace.\n\nSi crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.\n\n${platformUrl}`;
+
+  return sendEmail(email, 'Tu cuenta ha sido eliminada', html, text);
+}
+
 module.exports = {
   sendOrderConfirmation,
   sendNewOrderToSeller,
   sendOrderStatusChange,
   sendPasswordReset,
   sendWelcomeEmail,
+  sendAccountSuspendedEmail,
+  sendAccountDeletedEmail,
 };

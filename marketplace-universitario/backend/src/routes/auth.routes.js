@@ -22,4 +22,10 @@ router.get('/me', verifyJWT, authController.me);
 router.post('/forgot-password', forgotPasswordValidation, validate, authController.forgotPassword);
 router.post('/reset-password', resetPasswordValidation, validate, authController.resetPassword);
 
+// [DEBUG] Test email endpoint (development only)
+router.post('/debug/test-password-reset', authController.testPasswordReset);
+
+// [DEBUG] Force password reset without email (development only)
+router.post('/debug/force-password-reset', authController.forcePasswordReset);
+
 module.exports = router;
