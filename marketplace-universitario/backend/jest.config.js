@@ -25,6 +25,8 @@ const config = {
   setupFilesAfterEnv: [],
   testTimeout: 30000,
   verbose: true,
+  // Run suites sequentially — prevents FK race conditions on shared test DB
+  runInBand: true,
 };
 
 module.exports = config;
