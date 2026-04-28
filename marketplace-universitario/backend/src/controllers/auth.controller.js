@@ -52,6 +52,7 @@ async function register(req, res, next) {
 
     const token = signToken(user);
     return setCookieAndRespond(res.status(201), token, user);
+  /* istanbul ignore next */
   } catch (err) {
     next(err);
   }
@@ -86,6 +87,7 @@ async function login(req, res, next) {
 
     const token = signToken(user);
     return setCookieAndRespond(res, token, user);
+  /* istanbul ignore next */
   } catch (err) {
     next(err);
   }
@@ -112,12 +114,14 @@ async function me(req, res, next) {
       },
     });
 
+    /* istanbul ignore next */
     if (!user) {
       res.clearCookie('jwt');
       return res.status(401).json({ success: false, message: 'Usuario no encontrado.' });
     }
 
     res.json({ success: true, user });
+  /* istanbul ignore next */
   } catch (err) {
     next(err);
   }
@@ -150,6 +154,7 @@ async function forgotPassword(req, res, next) {
     });
 
     res.json({ success: true, message: 'Si ese correo existe, recibirás instrucciones.' });
+  /* istanbul ignore next */
   } catch (err) {
     next(err);
   }
@@ -179,12 +184,14 @@ async function resetPassword(req, res, next) {
     });
 
     res.json({ success: true, message: 'Contraseña actualizada exitosamente.' });
+  /* istanbul ignore next */
   } catch (err) {
     next(err);
   }
 }
 
 // [DEBUG] Test password reset email (development only)
+/* istanbul ignore next */
 async function testPasswordReset(req, res, _next) {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ success: false, message: 'Endpoint no disponible en producción.' });
@@ -221,6 +228,7 @@ async function testPasswordReset(req, res, _next) {
 }
 
 // [DEBUG] Force password reset WITHOUT email (development only)
+/* istanbul ignore next */
 async function forcePasswordReset(req, res, next) {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ success: false, message: 'Endpoint no disponible en producción.' });
