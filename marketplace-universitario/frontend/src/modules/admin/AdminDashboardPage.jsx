@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api.js';
 import Navbar from '../../components/layout/Navbar.jsx';
 import StarRating from '../../components/ui/StarRating.jsx';
+import Button from '../../components/ui/Button.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 const KPI_PALETTE = {
@@ -40,7 +42,14 @@ function PageLoader() {
   );
 }
 
+const ADMIN_SECTIONS = [
+  { id: 'dashboard', label: 'Dashboard', path: '/admin' },
+  { id: 'users', label: 'Usuarios', path: '/admin/users' },
+  { id: 'products', label: 'Productos', path: '/admin/products' },
+];
+
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const [report,    setReport]    = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error,     setError]     = useState(null);
@@ -61,9 +70,24 @@ export default function AdminDashboardPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
 
-        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-8 animate-in">
+        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-4 animate-in">
           Panel de administración
         </h1>
+
+        {/* Admin Navigation */}
+        <div className="bg-white rounded-2xl border border-[#E8E8E8] p-4 mb-8 flex flex-wrap gap-2 animate-in delay-1">
+          {ADMIN_SECTIONS.map((section) => (
+            <Button
+              key={section.id}
+              onClick={() => navigate(section.path)}
+              variant={section.path === '/admin' ? 'primary' : 'ghost'}
+              size="md"
+              className={section.path === '/admin' ? '' : 'text-[#666666] hover:text-[#990100]'}
+            >
+              {section.label}
+            </Button>
+          ))}
+        </div>
 
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-[rgba(153,1,0,0.06)] border border-[rgba(153,1,0,0.20)] text-sm text-[#990100]">
@@ -154,7 +178,7 @@ export default function AdminDashboardPage() {
                           <tr key={e.id} className="hover:bg-[#F6F6F6] transition-colors">
                             <td className="py-3 pr-4">
                               <p className="font-medium text-[#1A1A1A]">
-                                {e.profile?.displayName || e.email}
+                                {e.profile?.businessName || e.email}
                               </p>
                               <p className="text-xs text-[#999999]">{e.email}</p>
                             </td>

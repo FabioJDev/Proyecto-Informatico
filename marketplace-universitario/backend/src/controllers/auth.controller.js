@@ -141,6 +141,7 @@ async function forgotPassword(req, res, next) {
     // Fire-and-forget: email failures must not break the reset flow (RNF)
     sendPasswordReset(email, token).catch((err) => {
       console.error('[email] Password reset email failed:', err.message);
+      console.error('[email] Stack:', err.stack);
     });
 
     res.json({ success: true, message: 'Si ese correo existe, recibirás instrucciones.' });
@@ -178,4 +179,87 @@ async function resetPassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, logout, me, forgotPassword, resetPassword };
+// [DEBUG] Test password reset email (development only)
+async function testPasswordReset(req, res, next) {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'Endpoint no disponible en producción.' });
+  }
+
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email requerido.' });
+    }
+
+    const testToken = 'test-token-123456789';
+    const testUrl = `${process.env.FRONTEND_URL}/reset-password?token=${testToken}`;
+    
+    console.log(`[DEBUG] Enviando email de prueba a: ${email}`);
+    console.log(`[DEBUG] URL del test: ${testUrl}`);
+    
+    await sendPasswordReset(email, testToken);
+    
+    res.json({ 
+      success: true, 
+      message: 'Email de prueba enviado. Revisa los logs del servidor y la consola del navegador.',
+      testToken,
+      testUrl
+    });
+  } catch (err) {
+    console.error('[DEBUG] Error enviando email de prueba:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: `Error: ${err.message}`,
+      error: err.toString()
+    });
+  }
+}
+
+// [DEBUG] Force password reset WITHOUT email (development only)
+async function forcePasswordReset(req, res, next) {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'Endpoint no disponible en producción.' });
+  }
+
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email requerido.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    const token = uuidv4();
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { 
+        passwordResetToken: token, 
+        passwordResetExpiry: expiry 
+      },
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    console.log(`[DEBUG] 🔓 Forzado reset para: ${email}`);
+    console.log(`[DEBUG] Token: ${token}`);
+    console.log(`[DEBUG] URL: ${resetUrl}`);
+    console.log(`[DEBUG] Expira en: ${expiry.toISOString()}`);
+
+    res.json({
+      success: true,
+      message: 'Reset token generado sin enviar email.',
+      token,
+      resetUrl,
+      expiresAt: expiry.toISOString(),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, logout, me, forgotPassword, resetPassword, testPasswordReset, forcePasswordReset };

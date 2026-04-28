@@ -6,70 +6,119 @@ async function adminReport(req, res, next) {
     const now = new Date();
     const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
-    // Parallel queries
+    // Fast parallel queries - limited data
     const [
       totalUsers,
-      totalProducts,
+      totalActiveProducts,
       totalOrders,
-      activeProducts,
-      ordersThisMonth,
-      newUsersThisMonth,
+      totalEntrepreneurs,
+      totalBuyers,
       ordersByStatus,
-      recentOrders,
+      revenueData,
     ] = await Promise.all([
-      prisma.user.count({ where: { status: 'ACTIVE' } }),
-      prisma.product.count({ where: { status: 'ACTIVE' } }),
+      prisma.user.count({ where: { status: { not: 'DELETED' } } }),
+      prisma.product.count({ where: { status: 'ACTIVE', seller: { status: 'ACTIVE' } } }),
       prisma.order.count(),
-      prisma.product.count({ where: { status: 'ACTIVE' } }),
-      prisma.order.count({
-        where: { createdAt: { gte: new Date(now.getFullYear(), now.getMonth(), 1) } },
-      }),
-      prisma.user.count({
-        where: { createdAt: { gte: new Date(now.getFullYear(), now.getMonth(), 1) } },
-      }),
+      prisma.user.count({ where: { role: 'EMPRENDEDOR', status: { not: 'DELETED' } } }),
+      prisma.user.count({ where: { role: 'COMPRADOR', status: { not: 'DELETED' } } }),
       prisma.order.groupBy({
         by: ['status'],
         _count: { status: true },
       }),
+      // Get revenue data - limit to 5000 records
       prisma.order.findMany({
-        take: 10,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          product: { select: { name: true, price: true } },
-          buyer: { select: { email: true } },
-          seller: { select: { profile: { select: { businessName: true } } } },
+        where: {
+          createdAt: { gte: twelveMonthsAgo },
+          status: 'DELIVERED',
         },
+        select: {
+          createdAt: true,
+          product: { select: { price: true } },
+        },
+        take: 5000,
       }),
     ]);
 
-    // Monthly orders over the last 12 months using raw query
-    const monthlyOrders = await prisma.$queryRaw`
-      SELECT
-        TO_CHAR(created_at, 'YYYY-MM') as month,
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered
-      FROM orders
-      WHERE created_at >= ${twelveMonthsAgo}
-      GROUP BY month
-      ORDER BY month ASC
-    `;
+    // Group revenue by month
+    const revenueByMonth = {};
+    revenueData.forEach((order) => {
+      const month = `${order.createdAt.getFullYear()}-${String(order.createdAt.getMonth() + 1).padStart(2, '0')}`;
+      revenueByMonth[month] = (revenueByMonth[month] || 0) + parseFloat(order.product.price || 0);
+    });
+
+    const revenueArray = Object.entries(revenueByMonth)
+      .map(([month, revenue]) => ({ month, revenue }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // Get top entrepreneurs - limited query
+    const topEntrepreneurs = await prisma.user.findMany({
+      where: { role: 'EMPRENDEDOR', status: { not: 'DELETED' } },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        profile: {
+          select: {
+            businessName: true,
+            photoUrl: true,
+            reviews: { select: { rating: true }, take: 50 },
+          },
+        },
+        ordersAsSeller: {
+          select: { product: { select: { price: true } } },
+          take: 50,
+        },
+      },
+      orderBy: { ordersAsSeller: { _count: 'desc' } },
+      take: 15,
+    });
+
+    // Calculate metrics for top entrepreneurs
+    const topEntrepreneursList = topEntrepreneurs
+      .map((e) => {
+        const totalOrders = e.ordersAsSeller.length;
+        const totalRevenue = e.ordersAsSeller.reduce(
+          (sum, order) => sum + parseFloat(order.product.price || 0),
+          0
+        );
+        const avgRating =
+          e.profile?.reviews && e.profile.reviews.length > 0
+            ? parseFloat(
+                (e.profile.reviews.reduce((sum, r) => sum + r.rating, 0) / e.profile.reviews.length).toFixed(1)
+              )
+            : 0;
+
+        return {
+          id: e.id,
+          email: e.email,
+          role: e.role,
+          profile: {
+            businessName: e.profile?.businessName || '',
+            photoUrl: e.profile?.photoUrl || null,
+          },
+          totalOrders,
+          totalRevenue,
+          avgRating,
+        };
+      })
+      .filter((e) => e.totalOrders > 0)
+      .sort((a, b) => b.totalOrders - a.totalOrders || b.totalRevenue - a.totalRevenue)
+      .slice(0, 10);
 
     res.json({
       success: true,
       data: {
-        summary: {
-          totalUsers,
-          totalProducts: activeProducts,
-          totalOrders,
-          ordersThisMonth,
-          newUsersThisMonth,
-        },
-        ordersByStatus: ordersByStatus.reduce((acc, item) => {
-          acc[item.status] = item._count.status;
-          return acc;
-        }, {}),
-        monthlyOrders,
-        recentOrders,
+        totalUsers,
+        totalEntrepreneurs,
+        totalBuyers,
+        totalActiveProducts,
+        totalOrders,
+        revenueByMonth: revenueArray,
+        ordersByStatus: ordersByStatus.map((item) => ({
+          status: item.status,
+          count: item._count.status,
+        })),
+        topEntrepreneurs: topEntrepreneursList,
       },
     });
   } catch (err) {

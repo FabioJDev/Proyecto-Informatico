@@ -9,6 +9,9 @@ const { createReviewValidation } = require('../middlewares/validators/reviews.va
 // Public — get reviews for a profile
 router.get('/profile/:profileId', reviewsController.getByProfile);
 
+// Public — get reviews for a product
+router.get('/product/:productId', reviewsController.getByProduct);
+
 // Protected — create a review
 router.post('/', verifyJWT, requireRole('COMPRADOR'), createReviewValidation, validate, reviewsController.create);
 

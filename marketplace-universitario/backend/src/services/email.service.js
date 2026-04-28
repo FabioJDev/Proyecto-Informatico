@@ -10,20 +10,65 @@ async function getTransporter() {
   if (transporter) return transporter;
 
   if (process.env.SENDGRID_API_KEY) {
+    console.log('[email] Configurando transporter con SendGrid...');
     transporter = nodemailer.createTransport({
       host: 'smtp.sendgrid.net',
       port: 587,
       secure: false,
-      auth: { user: 'apikey', pass: process.env.SENDGRID_API_KEY },
+      auth: { 
+        user: 'apikey', 
+        pass: process.env.SENDGRID_API_KEY 
+      },
+      logger: true,
+      debug: true,
     });
+    
+    // Verificar conexión al transporter
+    try {
+      await transporter.verify();
+      console.log('[email] ✓ Transporter SendGrid verificado y funcionando');
+    } catch (err) {
+      console.error('[email] ❌ Error verificando transporter SendGrid:', err.message);
+      // Fallback a Gmail
+      console.log('[email] Cambiando a Gmail fallback debido a error...');
+      transporter = null;
+      return getTransporter();
+    }
   } else {
-    // Nodemailer fallback (Gmail SMTP)
+    console.log('[email] Configurando transporter con Gmail/SMTP fallback...');
+    
+    const smtpUser = process.env.SMTP_USER || process.env.EMAIL_FROM;
+    const smtpPass = process.env.SMTP_PASS;
+    
+    if (!smtpPass) {
+      console.warn('[email] ⚠️  SMTP_PASS no configurado');
+      console.warn('[email] Para producción, configura Gmail App Password:');
+      console.warn('[email]   https://myaccount.google.com/apppasswords');
+      console.warn('[email] Para desarrollo, usa Ethereal (email fake):');
+      console.warn('[email]   SMTP_USER=user@ethereal.email');
+      console.warn('[email]   SMTP_PASS=password');
+      return null;
+    }
+    
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587', 10),
       secure: false,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      auth: { 
+        user: smtpUser, 
+        pass: smtpPass 
+      },
+      logger: true,
+      debug: true,
     });
+    
+    try {
+      await transporter.verify();
+      console.log('[email] ✓ Transporter SMTP verificado y funcionando');
+    } catch (err) {
+      console.error('[email] ❌ Error verificando transporter SMTP:', err.message);
+      transporter = null;
+    }
   }
 
   return transporter;
@@ -34,17 +79,32 @@ async function getTransporter() {
 // ─────────────────────────────────────────────
 async function sendEmail(to, subject, html, text) {
   const t = await getTransporter();
+  
+  if (!t) {
+    console.error('[email] ❌ No transporter disponible. Configura SMTP_PASS en .env');
+    throw new Error('Email service not configured');
+  }
+  
   const from = process.env.SENDGRID_API_KEY
     ? `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.EMAIL_FROM}>`
     : `"${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'}" <${process.env.SMTP_USER || process.env.EMAIL_FROM}>`;
+
+  console.log(`[email] Preparando email: ${subject}`);
+  console.log(`[email] De: ${from}`);
+  console.log(`[email] Para: ${to}`);
 
   return retryWithBackoff(
     async () => {
       const mailData = { from, to, subject, html };
       if (text) mailData.text = text;
-      const info = await t.sendMail(mailData);
-      console.log(`📧 Email enviado a: ${to} — MessageId: ${info.messageId}`);
-      return info;
+      try {
+        const info = await t.sendMail(mailData);
+        console.log(`✅ [email] Email enviado exitosamente a: ${to} — MessageId: ${info.messageId}`);
+        return info;
+      } catch (err) {
+        console.error(`❌ [email] Error al enviar a ${to}:`, err.message);
+        throw err;
+      }
     },
     3,
     500
@@ -510,10 +570,122 @@ async function sendWelcomeEmail(email, role) {
   return sendEmail(email, '¡Bienvenido a Marketplace UAO!', html, text);
 }
 
+// ─────────────────────────────────────────────
+// RF-XX: Email de notificación de suspensión de cuenta
+// ─────────────────────────────────────────────
+async function sendAccountSuspendedEmail(email) {
+  const platformUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Cuenta suspendida</title></head>
+<body style="margin:0;padding:0;background:#F6F6F6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F6F6F6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+  style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;border:1px solid #E8E8E8;overflow:hidden;">
+  <tr><td style="background:#990100;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="background:#990100;padding:28px 40px;text-align:center;">
+    <p style="margin:0;color:#FFFFFF;font-size:20px;font-weight:800;">MARKETPLACE UAO</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,0.70);font-size:11px;letter-spacing:2px;">CAMPUS · UAO</p>
+  </td></tr>
+  <tr>
+    <td style="padding:32px 40px;text-align:center;">
+      <p style="margin:0 0 12px;font-size:28px;">⚠️</p>
+      <p style="margin:0 0 12px;color:#990100;font-size:22px;font-weight:700;">Tu cuenta ha sido suspendida</p>
+      <p style="margin:0 0 24px;color:#666666;font-size:15px;line-height:1.7;">
+        Tu cuenta en Marketplace UAO ha sido suspendida por el administrador. 
+        Por razones de seguridad, tu sesión actual ha sido cerrada.
+      </p>
+      <p style="margin:0 0 24px;color:#666666;font-size:14px;line-height:1.6;">
+        Si crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tr><td>
+          <a href="${platformUrl}" style="display:inline-block;background:#990100;color:#FFFFFF;
+            text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:700;">
+            Volver al marketplace
+          </a>
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="background:#333333;padding:16px 40px;text-align:center;">
+    <p style="margin:0;color:#999999;font-size:12px;">Marketplace UAO · Universidad Autónoma de Occidente · Cali, Colombia</p>
+  </td></tr>
+  <tr><td style="background:#990100;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Tu cuenta ha sido suspendida\n\nTu cuenta en Marketplace UAO ha sido suspendida por el administrador.\nPor razones de seguridad, tu sesión actual ha sido cerrada.\n\nSi crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.\n\n${platformUrl}`;
+
+  return sendEmail(email, 'Tu cuenta ha sido suspendida', html, text);
+}
+
+// ─────────────────────────────────────────────
+// RF-XX: Email de notificación de eliminación de cuenta
+// ─────────────────────────────────────────────
+async function sendAccountDeletedEmail(email) {
+  const platformUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Cuenta eliminada</title></head>
+<body style="margin:0;padding:0;background:#F6F6F6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F6F6F6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+  style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;border:1px solid #E8E8E8;overflow:hidden;">
+  <tr><td style="background:#990100;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="background:#990100;padding:28px 40px;text-align:center;">
+    <p style="margin:0;color:#FFFFFF;font-size:20px;font-weight:800;">MARKETPLACE UAO</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,0.70);font-size:11px;letter-spacing:2px;">CAMPUS · UAO</p>
+  </td></tr>
+  <tr>
+    <td style="padding:32px 40px;text-align:center;">
+      <p style="margin:0 0 12px;font-size:28px;">🗑️</p>
+      <p style="margin:0 0 12px;color:#990100;font-size:22px;font-weight:700;">Tu cuenta ha sido eliminada</p>
+      <p style="margin:0 0 24px;color:#666666;font-size:15px;line-height:1.7;">
+        Tu cuenta en Marketplace UAO ha sido eliminada por el administrador. 
+        Por razones de seguridad, tu sesión actual ha sido cerrada y no podrás acceder al marketplace.
+      </p>
+      <p style="margin:0 0 24px;color:#666666;font-size:14px;line-height:1.6;">
+        Si crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tr><td>
+          <a href="${platformUrl}" style="display:inline-block;background:#990100;color:#FFFFFF;
+            text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:700;">
+            Volver al marketplace
+          </a>
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="background:#333333;padding:16px 40px;text-align:center;">
+    <p style="margin:0;color:#999999;font-size:12px;">Marketplace UAO · Universidad Autónoma de Occidente · Cali, Colombia</p>
+  </td></tr>
+  <tr><td style="background:#990100;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Tu cuenta ha sido eliminada\n\nTu cuenta en Marketplace UAO ha sido eliminada por el administrador.\nPor razones de seguridad, tu sesión actual ha sido cerrada y no podrás acceder al marketplace.\n\nSi crees que esto es un error o tienes preguntas, por favor contacta al equipo de soporte.\n\n${platformUrl}`;
+
+  return sendEmail(email, 'Tu cuenta ha sido eliminada', html, text);
+}
+
 module.exports = {
   sendOrderConfirmation,
   sendNewOrderToSeller,
   sendOrderStatusChange,
   sendPasswordReset,
   sendWelcomeEmail,
+  sendAccountSuspendedEmail,
+  sendAccountDeletedEmail,
 };

@@ -1,5 +1,8 @@
 const rateLimit = require('express-rate-limit');
 
+// Skip rate limiting in development
+const skipInDev = process.env.NODE_ENV === 'development' || process.env.DISABLE_RATE_LIMIT === 'true';
+
 /**
  * General rate limiter — 100 requests per 1 minutes per IP
  */
@@ -12,7 +15,7 @@ const generalLimiter = rateLimit({
     success: false,
     message: 'Demasiadas solicitudes desde esta IP. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (req) => skipInDev || process.env.NODE_ENV === 'test',
 });
 
 /**
@@ -28,7 +31,7 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Demasiados intentos de autenticación. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (req) => skipInDev || process.env.NODE_ENV === 'test',
 });
 
 /**
@@ -43,7 +46,7 @@ const uploadLimiter = rateLimit({
     success: false,
     message: 'Límite de subidas alcanzado. Intenta de nuevo en 15 minutos.',
   },
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (req) => skipInDev || process.env.NODE_ENV === 'test',
 });
 
 module.exports = { generalLimiter, authLimiter, uploadLimiter };

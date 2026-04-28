@@ -98,4 +98,58 @@ async function getByProfile(req, res, next) {
   }
 }
 
-module.exports = { create, getByProfile };
+// GET /api/reviews/product/:productId — reviews for a specific product
+async function getByProduct(req, res, next) {
+  try {
+    const { productId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Verify product exists
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
+    }
+
+    // Get reviews where order.productId = productId
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where: { 
+          order: { productId } 
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reviewer: { select: { email: true } },
+        },
+      }),
+      prisma.review.count({ 
+        where: { order: { productId } } 
+      }),
+    ]);
+
+    // Calculate average rating for this product
+    const aggregate = await prisma.review.aggregate({
+      where: { order: { productId } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        product: { id: product.id, name: product.name },
+        averageRating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : null,
+        totalReviews: aggregate._count.rating,
+        reviews,
+      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, getByProfile, getByProduct };

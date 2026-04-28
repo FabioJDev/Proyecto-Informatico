@@ -55,21 +55,39 @@ export default function ReviewsSection({ profileId }) {
         </p>
       ) : (
         data.reviews.map((review) => (
-          <div key={review.id} className="bg-white rounded-xl border border-[#E8E8E8] p-4 space-y-2">
+          <div key={review.id} className="bg-white rounded-xl border border-[#E8E8E8] p-4 space-y-3">
+            {/* Reviewer header */}
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-[#1A1A1A]">
-                {review.reviewer?.email}
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-[#1A1A1A] block">
+                  {review.reviewer?.email}
+                </span>
+                {review.order?.product?.name && (
+                  <p className="text-xs text-[#999999] font-mono mt-0.5">
+                    📦 Producto: {review.order.product.name}
+                  </p>
+                )}
+              </div>
+              <span className="text-xs text-[#999999] font-mono whitespace-nowrap ml-2">
+                {formatDate(review.createdAt)}
               </span>
-              <span className="text-xs text-[#999999] font-mono">{formatDate(review.createdAt)}</span>
             </div>
+
+            {/* Product image if available */}
+            {review.order?.product?.images?.[0] && (
+              <div className="w-full h-32 rounded-lg overflow-hidden bg-[#E8E8E8]">
+                <img
+                  src={review.order.product.images[0]}
+                  alt={review.order.product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Rating and comment */}
             <StarRating value={review.rating} readOnly size="sm" />
             {review.comment && (
               <p className="text-sm text-[#666666] leading-relaxed">{review.comment}</p>
-            )}
-            {review.order?.product?.name && (
-              <p className="text-xs text-[#999999] font-mono">
-                Producto: {review.order.product.name}
-              </p>
             )}
           </div>
         ))

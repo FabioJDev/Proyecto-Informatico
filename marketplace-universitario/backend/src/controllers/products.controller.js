@@ -1,6 +1,39 @@
 const prisma = require('../lib/prisma');
 const { uploadProductImage, deleteFile, BUCKET_PRODUCTS } = require('../services/storage.service');
 
+// Helper: Get seller's average rating and review count
+async function getSellerRating(sellerId) {
+  const profile = await prisma.profile.findUnique({
+    where: { userId: sellerId },
+    include: {
+      reviews: {
+        select: { rating: true },
+      },
+    },
+  });
+
+  if (!profile || profile.reviews.length === 0) {
+    return { sellerAverageRating: null, sellerTotalReviews: 0 };
+  }
+
+  const averageRating = (profile.reviews.reduce((sum, r) => sum + r.rating, 0) / profile.reviews.length).toFixed(1);
+  return { sellerAverageRating: parseFloat(averageRating), sellerTotalReviews: profile.reviews.length };
+}
+
+// Helper: Get product's average rating and review count
+async function getProductRating(productId) {
+  const aggregate = await prisma.review.aggregate({
+    where: { order: { productId } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+
+  return {
+    averageRating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : null,
+    totalReviews: aggregate._count.rating || 0,
+  };
+}
+
 // GET /api/products — public paginated catalog with filters
 async function getAll(req, res, next) {
   try {
@@ -25,6 +58,8 @@ async function getAll(req, res, next) {
     const where = {
       // When filtered by seller (My Products), show all non-deleted; otherwise only ACTIVE for public catalog
       ...(sellerId ? { sellerId, status: { not: 'DELETED' } } : { status: 'ACTIVE' }),
+      // Exclude products from deleted sellers
+      seller: { status: 'ACTIVE' },
       ...(categoryFilter && { categoryId: categoryFilter }),
       ...(searchTerm && {
         OR: [
@@ -63,6 +98,15 @@ async function getAll(req, res, next) {
       }),
       prisma.product.count({ where }),
     ]);
+
+    // Enrich products with ratings (product-level, not seller-level)
+    const productsWithRatings = await Promise.all(
+      products.map(async (product) => {
+        const productRating = await getProductRating(product.id);
+        return { ...product, ...productRating };
+      })
+    );
+
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[getAll] Products query: ${Date.now() - queryStart}ms`);
     }
@@ -70,7 +114,7 @@ async function getAll(req, res, next) {
     const totalPages = Math.ceil(total / limit);
     res.json({
       success: true,
-      data: products,
+      data: productsWithRatings,
       pagination: {
         page,
         limit,
@@ -103,6 +147,7 @@ async function getById(req, res, next) {
           select: {
             id: true,
             email: true,
+            status: true,
             profile: { select: { businessName: true, photoUrl: true, description: true } },
           },
         },
@@ -110,11 +155,18 @@ async function getById(req, res, next) {
       },
     });
 
-    if (!product || product.status === 'DELETED') {
+    if (!product || product.status === 'DELETED' || product.seller.status === 'DELETED') {
       return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
     }
 
-    res.json({ success: true, data: product });
+    // Enrich with product rating
+    const productRating = await getProductRating(product.id);
+    const enrichedProduct = {
+      ...product,
+      ...productRating,
+    };
+
+    res.json({ success: true, data: enrichedProduct });
   } catch (err) {
     next(err);
   }
