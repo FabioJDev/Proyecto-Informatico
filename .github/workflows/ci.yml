@@ -48,8 +48,9 @@ jobs:
       JWT_EXPIRES_IN: 8h
       BCRYPT_COST_FACTOR: '4'
       FRONTEND_URL: http://localhost:5173
-      RESEND_API_KEY: placeholder-resend-key
+      BREVO_API_KEY: placeholder-brevo-key
       EMAIL_FROM: noreply@placeholder.com
+      EMAIL_FROM_NAME: Marketplace Universitario
 
     steps:
       - name: Checkout código
