@@ -1,21 +1,33 @@
-const { Resend } = require('resend');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─────────────────────────────────────────────
 // Internal send helper with retry (RNF-11)
 // ─────────────────────────────────────────────
 async function sendEmail(to, subject, html, text) {
-  const from = `${process.env.EMAIL_FROM_NAME || 'Marketplace UAO'} <${process.env.EMAIL_FROM}>`;
+  const senderName  = process.env.EMAIL_FROM_NAME || 'Marketplace UAO';
+  const senderEmail = process.env.EMAIL_FROM;
 
   return retryWithBackoff(
     async () => {
-      const payload = { from, to, subject, html };
-      if (text) payload.text = text;
-      const { data, error } = await resend.emails.send(payload);
-      if (error) throw new Error(error.message || JSON.stringify(error));
-      console.log(`📧 Email enviado a: ${to} — id: ${data.id}`);
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          ...(text && { textContent: text }),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+      console.log(`📧 Email enviado a: ${to} — id: ${data.messageId}`);
       return data;
     },
     3,
