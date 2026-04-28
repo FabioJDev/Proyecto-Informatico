@@ -5,6 +5,7 @@ import Navbar from '../../components/layout/Navbar.jsx';
 import Footer from '../../components/layout/Footer.jsx';
 import Button from '../../components/ui/Button.jsx';
 import DeleteProductModal from '../../components/products/DeleteProductModal.jsx';
+import ProductReviewsSection from '../products/ProductReviewsSection.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -214,6 +215,12 @@ export default function ProductDetailPage() {
 
             <p className="text-xs text-[#999999] font-mono">Publicado el {formatDate(product.createdAt)}</p>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 max-w-4xl">
+          <h2 className="text-xl font-bold text-[#1A1A1A] mb-6">Reseñas del producto</h2>
+          <ProductReviewsSection productId={id} />
         </div>
       </main>
 

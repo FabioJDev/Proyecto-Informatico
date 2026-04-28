@@ -39,6 +39,7 @@ const forgotPasswordValidation = [
 const resetPasswordValidation = [
   body('token').notEmpty().withMessage('Token de recuperación requerido.').trim(),
   body('password')
+    .notEmpty().withMessage('La contraseña es requerida.')
     .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres.')
     .matches(/[A-Z]/).withMessage('La contraseña debe contener al menos una mayúscula.')
     .matches(/[0-9]/).withMessage('La contraseña debe contener al menos un número.'),

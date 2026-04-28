@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { uploadProfileImage, deleteFile, BUCKET_PROFILES } = require('../services/storage.service');
+const { sendAccountSuspendedEmail, sendAccountDeletedEmail } = require('../services/email.service');
 
 // GET /api/users — [ADMIN] list all users with pagination
 async function getAll(req, res, next) {
@@ -8,12 +9,23 @@ async function getAll(req, res, next) {
     const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
     const status = req.query.status; // optional filter
+    const role = req.query.role;     // optional filter
+    const search = req.query.search; // optional search by email/name
 
-    const where = status ? { status } : {};
+    const where = {
+      ...(status && { status }),
+      ...(role && { role }),
+      ...(search && {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { profile: { businessName: { contains: search, mode: 'insensitive' } } },
+        ],
+      }),
+    };
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
-        where,
+        where: { ...where, status: { not: 'DELETED' } },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -23,11 +35,20 @@ async function getAll(req, res, next) {
           role: true,
           status: true,
           createdAt: true,
-          profile: { select: { businessName: true } },
-          _count: { select: { products: true, ordersAsBuyer: true } },
+          profile: {
+            select: {
+              businessName: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
+              ordersAsBuyer: true,
+            },
+          },
         },
       }),
-      prisma.user.count({ where }),
+      prisma.user.count({ where: { ...where, status: { not: 'DELETED' } } }),
     ]);
 
     res.json({
@@ -62,6 +83,18 @@ async function updateStatus(req, res, next) {
       select: { id: true, email: true, role: true, status: true },
     });
 
+    // Send email notification based on status change
+    try {
+      if (status === 'SUSPENDED') {
+        await sendAccountSuspendedEmail(user.email);
+      } else if (status === 'DELETED') {
+        await sendAccountDeletedEmail(user.email);
+      }
+    } catch (emailErr) {
+      console.error(`[users.controller] Error sending status change email to ${user.email}:`, emailErr.message);
+      // Don't fail the request if email fails, but log the error
+    }
+
     res.json({ success: true, message: `Usuario ${status.toLowerCase()} correctamente.`, user: updated });
   } catch (err) {
     next(err);
@@ -79,6 +112,7 @@ async function getProfile(req, res, next) {
         id: true,
         email: true,
         role: true,
+        status: true,
         createdAt: true,
         profile: true,
         products: {
@@ -96,7 +130,7 @@ async function getProfile(req, res, next) {
       },
     });
 
-    if (!user) {
+    if (!user || user.status === 'DELETED') {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
     }
 
