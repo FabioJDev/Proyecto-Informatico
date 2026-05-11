@@ -40,8 +40,9 @@ async function register(req, res, next) {
     }
 
     const passwordHash = await bcrypt.hash(password, COST_FACTOR);
+    const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
     const user = await prisma.user.create({
-      data: { email, passwordHash, role },
+      data: { email, passwordHash, role, username },
       include: { profile: true },
     });
 
