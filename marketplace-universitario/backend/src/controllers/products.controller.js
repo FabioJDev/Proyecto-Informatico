@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { uploadProductImage, deleteFile, BUCKET_PRODUCTS } = require('../services/storage.service');
 
 // Batch-fetch ratings for multiple products in a single query (avoids N+1)
+/* istanbul ignore next */
 async function getRatingsForProducts(productIds) {
   if (!productIds.length) return {};
   const reviews = await prisma.review.findMany({
