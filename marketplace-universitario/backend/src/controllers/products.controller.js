@@ -1,18 +1,28 @@
 const prisma = require('../lib/prisma');
 const { uploadProductImage, deleteFile, BUCKET_PRODUCTS } = require('../services/storage.service');
 
-// Helper: Get product's average rating and review count
-async function getProductRating(productId) {
-  const aggregate = await prisma.review.aggregate({
-    where: { order: { productId } },
-    _avg: { rating: true },
-    _count: { rating: true },
+// Batch-fetch ratings for multiple products in a single query (avoids N+1)
+async function getRatingsForProducts(productIds) {
+  if (!productIds.length) return {};
+  const reviews = await prisma.review.findMany({
+    where: { order: { productId: { in: productIds } } },
+    select: { rating: true, order: { select: { productId: true } } },
   });
-
-  return {
-    averageRating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : null,
-    totalReviews: aggregate._count.rating || 0,
-  };
+  const map = {};
+  for (const r of reviews) {
+    const pid = r.order.productId;
+    if (!map[pid]) map[pid] = { sum: 0, count: 0 };
+    map[pid].sum += r.rating;
+    map[pid].count += 1;
+  }
+  const result = {};
+  for (const pid of productIds) {
+    const entry = map[pid];
+    result[pid] = entry
+      ? { averageRating: parseFloat((entry.sum / entry.count).toFixed(1)), totalReviews: entry.count }
+      : { averageRating: null, totalReviews: 0 };
+  }
+  return result;
 }
 
 // GET /api/products — public paginated catalog with filters
@@ -80,13 +90,8 @@ async function getAll(req, res, next) {
       prisma.product.count({ where }),
     ]);
 
-    // Enrich products with ratings (product-level, not seller-level)
-    const productsWithRatings = await Promise.all(
-      products.map(async (product) => {
-        const productRating = await getProductRating(product.id);
-        return { ...product, ...productRating };
-      })
-    );
+    const ratingsMap = await getRatingsForProducts(products.map((p) => p.id));
+    const productsWithRatings = products.map((p) => ({ ...p, ...ratingsMap[p.id] }));
 
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[getAll] Products query: ${Date.now() - queryStart}ms`);
@@ -141,12 +146,8 @@ async function getById(req, res, next) {
       return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
     }
 
-    // Enrich with product rating
-    const productRating = await getProductRating(product.id);
-    const enrichedProduct = {
-      ...product,
-      ...productRating,
-    };
+    const ratingsMap = await getRatingsForProducts([product.id]);
+    const enrichedProduct = { ...product, ...ratingsMap[product.id] };
 
     res.json({ success: true, data: enrichedProduct });
   /* istanbul ignore next */
